@@ -41,10 +41,21 @@ document.addEventListener("DOMContentLoaded", () => {
   backBtn?.addEventListener("click", () => showMain());
 
   saveBtn?.addEventListener("click", () => {
-    const domain = domainEl?.value.trim() || "";
+    const raw = domainEl?.value.trim() || "";
     const apiKey = apiKeyEl?.value.trim() || "";
-    if (!domain || !apiKey) return alert("Please enter instance domain and API key");
-    chrome.storage.sync.set({ instanceDomain: domain, apiKey }, () => {
+    if (!raw || !apiKey) return alert("Please enter instance domain and API key");
+
+    // Normalize: ensure protocol and store only the origin (scheme + host + optional port)
+    let normalized = raw;
+    if (!/^https?:\/\//i.test(normalized)) normalized = `https://${normalized}`;
+    let origin: string;
+    try {
+      origin = new URL(normalized).origin;
+    } catch (e) {
+      return alert("Invalid domain");
+    }
+
+    chrome.storage.sync.set({ instanceDomain: origin, apiKey }, () => {
       if (statusEl) statusEl.textContent = "Saved.";
       setTimeout(() => {
         if (statusEl) statusEl.textContent = "";
