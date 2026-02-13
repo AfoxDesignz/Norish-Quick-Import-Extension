@@ -3,7 +3,7 @@
   "name": "Norish Quick Import",
   "version": "0.1.0",
   "description": "Quickly import recipes to a Norish instance",
-  "permissions": ["cookies", "scripting", "activeTab", "webRequest", "storage"],
+  "permissions": ["activeTab", "storage"],
   "host_permissions": ["<all_urls>"],
   "background": { "service_worker": "background.js" },
   "icons": {
