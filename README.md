@@ -1,6 +1,6 @@
 # Norish Quick Import
 
-![version](https://img.shields.io/github/v/release/AfoxDesignz/norish-quick-import-extension?style=for-the-badge) ![license](https://img.shields.io/badge/license-MIT-yellow.svg?style=for-the-badge) [![Static Badge](https://img.shields.io/badge/available_for_chromium-555555?style=for-the-badge&logo=googlechrome&logoColor=white)](https://www.wikiwand.com/en/articles/Chromium_(web_browser))
+![version](https://img.shields.io/github/v/release/AfoxDesignz/Norish-Quick-Import-Extension?style=for-the-badge) ![license](https://img.shields.io/badge/license-MIT-yellow.svg?style=for-the-badge) [![Static Badge](https://img.shields.io/badge/available_for_chromium-555555?style=for-the-badge&logo=googlechrome&logoColor=white)](https://www.wikiwand.com/en/articles/Chromium_(web_browser))
 
 
 Save recipes from any website into [Norish](https://github.com/norish-recipes/norish) in a couple of clicks while you browse.
@@ -46,7 +46,7 @@ Your Norish domain and API key are stored in Chrome sync storage (so they can sy
 1. Clone this repository:
 
 ```bash
-git clone https://github.com/AfoxDesignz/norish-quick-import-extension.git
+git clone https://github.com/AfoxDesignz/Norish-Quick-Import-Extension.git
 ```
 
 2. Install dependencies:
