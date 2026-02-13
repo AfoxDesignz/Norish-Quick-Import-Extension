@@ -1,0 +1,13 @@
+{
+	"name": "norish-quick-import",
+	"version": "0.1.0",
+	"private": true,
+	"scripts": {
+		"build": "esbuild src/background.ts src/popup.ts --bundle --outdir=dist --platform=browser --target=es2020 && node ./scripts/copy.js"
+	},
+	"devDependencies": {
+		"@types/chrome": "^0.1.36",
+		"esbuild": "^0.27.3",
+		"typescript": "^5.9.3"
+	}
+}
