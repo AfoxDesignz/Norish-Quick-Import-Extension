@@ -10,6 +10,10 @@ Save recipes from any website into [Norish](https://github.com/norish-recipes/no
 - Lightweight background worker for import interactions
 - Built with TypeScript
 
+**Planned**
+
+- Improve UI
+
 > This extension is an independent project and is not an official browser extension nor affiliated with the [Norish](https://github.com/norish-recipes/norish) project.
 
 ---
