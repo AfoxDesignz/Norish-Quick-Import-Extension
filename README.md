@@ -6,13 +6,17 @@ Save recipes from any website into [Norish](https://github.com/norish-recipes/no
 
 ### **Features**
 
-- Small popup UI for quick actions
-- Lightweight background worker for import interactions
-- Built with TypeScript
+- Save recipes quickly: send the current page's recipe to your Norish instance in two clicks.
+- Works on any site: import recipes from any webpage - no site-specific setup required.
+- Simple setup: enter your Norish domain and API key once. The settings sync with your browser profile.
+- Compact popup: a small, focused UI that keeps browsing uninterrupted.
+- Privacy-first: only the page URL and your API key are sent to the Norish instance you configure.
+- Lightweight: runs in the background with minimal permissions and low resource use.
 
-**Planned**
+**Planned improvements**
 
-- Improve UI
+- Improve the popup UI.
+- Clearer import status feedback.
 
 > [!NOTE] 
 > This extension is an independent project and is neither an official browser extension nor affiliated with the [Norish](https://github.com/norish-recipes/norish) project.
