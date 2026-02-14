@@ -6,12 +6,12 @@ Save recipes from any website into [Norish](https://github.com/norish-recipes/no
 
 ### **Features**
 
-- Save recipes quickly: send the current page's recipe to your Norish instance in two clicks.
-- Works on any site: import recipes from any webpage - no site-specific setup required.
-- Simple setup: enter your Norish domain and API key once. The settings sync with your browser profile.
-- Compact popup: a small, focused UI that keeps browsing uninterrupted.
-- Privacy-first: only the page URL and your API key are sent to the Norish instance you configure.
-- Lightweight: runs in the background with minimal permissions and low resource use.
+- **Save recipes quickly**: send the current page's recipe to your Norish instance in two clicks.
+- **Works on any site**: import recipes from any webpage - no site-specific setup required. _(has to be supported by norish)_
+- **Simple setup**: enter your Norish domain and API key once. The settings sync with your browser profile.
+- **Compact popup**: a small, focused UI that keeps browsing uninterrupted.
+- **Privacy-first**: only the page URL and your API key are sent to the Norish instance you configure.
+- **Lightweight**: runs in the background with minimal permissions and low resource use.
 
 **Planned improvements**
 
