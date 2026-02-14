@@ -1,6 +1,6 @@
-# Norish Quick Import
+[![version](https://img.shields.io/github/v/release/AfoxDesignz/Norish-Quick-Import-Extension?style=for-the-badge&color=336640&labelColor=faf5e8)](https://github.com/AfoxDesignz/Norish-Quick-Import-Extension/releases) ![Visitors](https://api.visitorbadge.io/api/visitors?path=https%3A%2F%2Fgithub.com%2FAfoxDesignz%2Fnorish-quick-import-extension&labelColor=%23faf5e8&countColor=%23336640) ![license](https://img.shields.io/badge/license-MIT-336640.svg?style=for-the-badge&labelColor=faf5e8) [![Static Badge](https://img.shields.io/badge/available_for_chromium-336640?style=for-the-badge&logo=googlechrome&logoColor=336640&labelColor=faf5e8)](<https://www.wikiwand.com/en/articles/Chromium_(web_browser)>)
 
-![version](https://img.shields.io/github/v/release/AfoxDesignz/Norish-Quick-Import-Extension?style=for-the-badge) ![license](https://img.shields.io/badge/license-MIT-yellow.svg?style=for-the-badge) [![Static Badge](https://img.shields.io/badge/available_for_chromium-555555?style=for-the-badge&logo=googlechrome&logoColor=white)](<https://www.wikiwand.com/en/articles/Chromium_(web_browser)>)
+# Norish Quick Import
 
 Save recipes from any website into [Norish](https://github.com/norish-recipes/norish) in a couple of clicks while you browse.
 
