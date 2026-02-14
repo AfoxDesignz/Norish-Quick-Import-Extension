@@ -3,7 +3,7 @@ name: Build and Release
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - "v*.*.*"
   workflow_dispatch: {}
 
 permissions:
@@ -19,7 +19,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: "18"
 
       - name: Enable pnpm (Corepack)
         run: |
@@ -39,8 +39,6 @@ jobs:
           ZIP_NAME="norish-quick-import-${{ github.ref_name }}.zip"
           cd dist
           zip -r ../${ZIP_NAME} ./*
-
-
 
       - name: Determine prerelease
         id: prerelease

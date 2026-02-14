@@ -3,28 +3,48 @@
   <head>
     <meta charset="utf-8" />
     <style>
-      body { font-family: Arial, sans-serif; padding: 12px; width:360px }
-      input { width:100%; box-sizing:border-box; margin-bottom:8px }
-      button { margin-right:8px }
-      .row { display:flex; gap:8px }
+      body {
+        font-family: Arial, sans-serif;
+        padding: 12px;
+        width: 360px;
+      }
+      input {
+        width: 100%;
+        box-sizing: border-box;
+        margin-bottom: 8px;
+      }
+      button {
+        margin-right: 8px;
+      }
+      .row {
+        display: flex;
+        gap: 8px;
+      }
     </style>
   </head>
   <body>
-
-    <div style="display:flex; align-items:center; justify-content:space-between">
-      <h3 style="margin:0">Norish Quick Import</h3>
-      <button id="cog" title="Settings" style="border:none;background:transparent;cursor:pointer">⚙️</button>
+    <div
+      style="display: flex; align-items: center; justify-content: space-between"
+    >
+      <h3 style="margin: 0">Norish Quick Import</h3>
+      <button
+        id="cog"
+        title="Settings"
+        style="border: none; background: transparent; cursor: pointer"
+      >
+        ⚙️
+      </button>
     </div>
 
     <div id="mainView">
       <label>Recipe URL</label>
       <input id="recipeUrl" placeholder="https://..." />
-      <div class="row" style="margin-top:8px">
+      <div class="row" style="margin-top: 8px">
         <button id="import">Send</button>
       </div>
     </div>
 
-    <div id="settingsView" style="display:none">
+    <div id="settingsView" style="display: none">
       <label>Instance domain</label>
       <input id="domain" placeholder="https://your.norish.domain" />
       <label>API key (x-api-key)</label>
@@ -35,7 +55,7 @@
       </div>
     </div>
 
-    <div id="status" aria-live="polite" style="margin-top:8px"></div>
+    <div id="status" aria-live="polite" style="margin-top: 8px"></div>
 
     <script src="popup.js"></script>
   </body>
