@@ -20,11 +20,15 @@ document.addEventListener("DOMContentLoaded", () => {
   function showSettings() {
     if (mainView) mainView.style.display = "none";
     if (settingsView) settingsView.style.display = "block";
+    if (cogBtn) cogBtn.style.display = "none";
+    if (backBtn) backBtn.style.display = "inline";
   }
 
   function showMain() {
     if (settingsView) settingsView.style.display = "none";
     if (mainView) mainView.style.display = "block";
+    if (cogBtn) cogBtn.style.display = "inline";
+    if (backBtn) backBtn.style.display = "none";
   }
 
   chrome.storage.sync.get({ instanceDomain: "", apiKey: "" }, (res: any) => {

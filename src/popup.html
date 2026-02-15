@@ -26,20 +26,29 @@
     <div
       style="display: flex; align-items: center; justify-content: space-between"
     >
-      <h3 style="margin: 0">Norish Quick Import</h3>
-      <button
-        id="cog"
-        title="Settings"
-        style="border: none; background: transparent; cursor: pointer"
-      >
-        ⚙️
-      </button>
+      <h3>Norish Quick Import</h3>
+      <div>
+        <button
+          id="back"
+          title="Back"
+          style="border: none; background: transparent; cursor: pointer"
+        >
+          ✖
+        </button>
+        <button
+          id="cog"
+          title="Settings"
+          style="border: none; background: transparent; cursor: pointer"
+        >
+          ⚙️
+        </button>
+      </div>
     </div>
 
     <div id="mainView">
       <label>Recipe URL</label>
-      <input id="recipeUrl" placeholder="https://..." />
-      <div class="row" style="margin-top: 8px">
+      <div style="display: flex; gap: 8px; align-items: center">
+        <input id="recipeUrl" placeholder="https://..." style="flex: 1; margin-bottom: 0" />
         <button id="import">Send</button>
       </div>
     </div>
@@ -51,7 +60,6 @@
       <input id="apiKey" placeholder="Enter API key" />
       <div class="row">
         <button id="save">Save</button>
-        <button id="back">Back</button>
       </div>
     </div>
 
