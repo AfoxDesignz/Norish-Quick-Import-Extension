@@ -3,20 +3,22 @@
 
 ---
 
-<center>
-<img alt="Logo" src="https://raw.githubusercontent.com/AfoxDesignz/Norish-Quick-Import-Extension/main/docs/logo/logo.png">
-
-# Norish Quick Import
-
-</center>
+<p align="center">
+  <img
+    alt="Logo"
+    src="https://raw.githubusercontent.com/AfoxDesignz/Norish-Quick-Import-Extension/main/docs/logo/logo.png"
+    width="180"
+  />
+</p>
+<h1 align="center">Norish Quick Import</h1>
 
 Save recipes from any website into [Norish](https://github.com/norish-recipes/norish) in just two clicks while you browse.
 
-![](https://raw.githubusercontent.com/AfoxDesignz/Norish-Quick-Import-Extension/main/docs/images/screenshot_home.png, "Screenshot")
+![](https://raw.githubusercontent.com/AfoxDesignz/Norish-Quick-Import-Extension/main/docs/images/screenshot_home.png)
 
-#### ![](https://raw.githubusercontent.com/tailwindlabs/heroicons/refs/heads/master/src/16/solid/photo.svg) Screenshot
+#### ![](https://raw.githubusercontent.com/tailwindlabs/heroicons/refs/heads/master/src/24/solid/photo.svg#gh-light-mode-only)![](https://raw.githubusercontent.com/tailwindlabs/heroicons/refs/heads/master/src/24/outline/photo.svg#gh-dark-mode-only) Screenshot
 
-### ![](https://raw.githubusercontent.com/tailwindlabs/heroicons/refs/heads/master/src/16/solid/numbered-list.svg) Features
+### ![](https://raw.githubusercontent.com/tailwindlabs/heroicons/refs/heads/master/src/24/solid/numbered-list.svg#gh-light-mode-only)![](https://raw.githubusercontent.com/tailwindlabs/heroicons/refs/heads/master/src/24/outline/numbered-list.svg#gh-dark-mode-only) Features
 
 - **Save recipes quickly**: send the current page's recipe to your Norish instance in two clicks.
 - **Works on any site**: import recipes from any webpage - no site-specific setup required. _(has to be supported by norish)_
@@ -26,19 +28,20 @@ Save recipes from any website into [Norish](https://github.com/norish-recipes/no
 **Planned improvements**
 
 - Improve the popup UI.
-- Add more features
+- Clearer import status feedback.
 
-### ![](https://raw.githubusercontent.com/tailwindlabs/heroicons/refs/heads/master/src/16/solid/globe-alt.svg) Supported browsers
+### ![](https://raw.githubusercontent.com/tailwindlabs/heroicons/refs/heads/master/src/24/solid/globe-alt.svg#gh-light-mode-only)![](https://raw.githubusercontent.com/tailwindlabs/heroicons/refs/heads/master/src/24/outline/globe-alt.svg#gh-dark-mode-only) Supported browsers
 
 - Chromium-based browsers with Manifest V3 support (tested with recent Google Chrome and Vivaldi versions).
 - Firefox is currently not supported.
 
 > [!NOTE]
+> [!NOTE]
 > This extension is an independent project and is neither an official browser extension nor affiliated with the [Norish](https://github.com/norish-recipes/norish) project.
 
 ---
 
-### ![](https://raw.githubusercontent.com/tailwindlabs/heroicons/refs/heads/master/src/16/solid/rocket-launch.svg) Quickstart
+### ![](https://raw.githubusercontent.com/tailwindlabs/heroicons/refs/heads/master/src/24/solid/rocket-launch.svg#gh-light-mode-only)![](https://raw.githubusercontent.com/tailwindlabs/heroicons/refs/heads/master/src/24/outline/rocket-launch.svg#gh-dark-mode-only) Quickstart
 
 Prebuilt releases include a ZIP of the compiled extension (contents of `dist/`). Read below if you want to build from source.
 
@@ -64,7 +67,7 @@ After setting up the Extension you can just browse the internet and whenever you
 
 ---
 
-### ![](https://raw.githubusercontent.com/tailwindlabs/heroicons/refs/heads/master/src/16/solid/command-line.svg) Build from source
+### ![](https://raw.githubusercontent.com/tailwindlabs/heroicons/refs/heads/master/src/24/solid/command-line.svg#gh-light-mode-only)![](https://raw.githubusercontent.com/tailwindlabs/heroicons/refs/heads/master/src/24/outline/command-line.svg#gh-dark-mode-only) Build from source
 
 1. Clone this repository:
 
@@ -88,7 +91,7 @@ pnpm run build
 
 ---
 
-### ![](https://raw.githubusercontent.com/tailwindlabs/heroicons/refs/heads/master/src/16/solid/finger-print.svg) Privacy
+### ![](https://raw.githubusercontent.com/tailwindlabs/heroicons/refs/heads/master/src/24/solid/finger-print.svg#gh-light-mode-only)![](https://raw.githubusercontent.com/tailwindlabs/heroicons/refs/heads/master/src/24/outline/finger-print.svg#gh-dark-mode-only) Privacy
 
 Data handling:
 
@@ -97,7 +100,7 @@ Data handling:
 - Sent to your configured Norish instance during import: recipe URL and API key.
 - **Not** sent: analytics, tracking data, or data to third-party services.
 
-### ![](https://raw.githubusercontent.com/tailwindlabs/heroicons/refs/heads/master/src/16/solid/flag.svg) Permissions
+### ![](https://raw.githubusercontent.com/tailwindlabs/heroicons/refs/heads/master/src/24/solid/flag.svg#gh-light-mode-only)![](https://raw.githubusercontent.com/tailwindlabs/heroicons/refs/heads/master/src/24/outline/flag.svg#gh-dark-mode-only) Permissions
 
 The extension currently requests:
 
@@ -107,7 +110,7 @@ The extension currently requests:
 
 ---
 
-### ![](https://raw.githubusercontent.com/tailwindlabs/heroicons/refs/heads/master/src/16/solid/shield-exclamation.svg) License
+### ![](https://raw.githubusercontent.com/tailwindlabs/heroicons/refs/heads/master/src/24/solid/shield-exclamation.svg#gh-light-mode-only)![](https://raw.githubusercontent.com/tailwindlabs/heroicons/refs/heads/master/src/24/outline/shield-exclamation.svg#gh-dark-mode-only) License
 
 - This repository is licensed under the MIT License. See the `LICENSE` file for details.
 
