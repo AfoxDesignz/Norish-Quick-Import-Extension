@@ -41,7 +41,7 @@ Save recipes from any website into [Norish](https://github.com/norish-recipes/no
 
 <h3><picture><source media="(prefers-color-scheme: dark)" srcset="docs/icons/quickstart-white.svg"><img alt="" src="docs/icons/quickstart-black.svg" width="16" height="16"></picture> Quickstart</h3>
 
-Prebuilt releases include a ZIP of the compiled extension (contents of `dist/`). Read [below](#build-from-source) if you want to build from source.
+Prebuilt releases include a ZIP of the compiled extension (contents of `dist/`). Read [below](#-build-from-source) if you want to build from source.
 
 #### To install from a release:
 
