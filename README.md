@@ -7,6 +7,7 @@
 <img alt="Logo" src="https://raw.githubusercontent.com/AfoxDesignz/Norish-Quick-Import-Extension/main/docs/logo/logo.png">
 
 # Norish Quick Import
+
 </center>
 
 Save recipes from any website into [Norish](https://github.com/norish-recipes/norish) in just two clicks while you browse.
