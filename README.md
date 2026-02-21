@@ -16,19 +16,19 @@
 
 Save recipes from any website into [Norish](https://github.com/norish-recipes/norish) in just two clicks while you browse.
 
-### ![](https://api.iconify.design/mdi:format-list-numbered.svg?color=%23000000&width=18&height=18#gh-light-mode-only)![](https://api.iconify.design/mdi:format-list-numbered.svg?color=%23ffffff&width=18&height=18#gh-dark-mode-only) Features
+<h3><picture><source media="(prefers-color-scheme: dark)" srcset="docs/icons/features-white.svg"><img alt="" src="docs/icons/features-black.svg" width="16" height="16"></picture> Features</h3>
 
 - **Save recipes quickly**: send the current page's recipe to your Norish instance in two clicks.
 - **Works on any site**: import recipes from any webpage - no site-specific setup required. _(has to be supported by norish)_
 - **Simple setup**: enter your Norish domain and API key once. The settings sync with your browser profile.
 - **Privacy-first**: only the page URL and your API key are sent to the Norish instance you configure.
 
-**Planned improvements**
+**Planned**
 
-- Improve the popup UI.
-- Clearer import status feedback.
+- Improve the popup UI
+- Add more functionality
 
-### ![](https://api.iconify.design/mdi:earth.svg?color=%23000000&width=18&height=18#gh-light-mode-only)![](https://api.iconify.design/mdi:earth.svg?color=%23ffffff&width=18&height=18#gh-dark-mode-only) Supported browsers
+<h3><picture><source media="(prefers-color-scheme: dark)" srcset="docs/icons/browsers-white.svg"><img alt="" src="docs/icons/browsers-black.svg" width="16" height="16"></picture> Supported browsers</h3>
 
 - Chromium-based browsers with Manifest V3 support (tested with recent Google Chrome and Vivaldi versions).
 - Firefox is currently not supported.
@@ -38,7 +38,7 @@ Save recipes from any website into [Norish](https://github.com/norish-recipes/no
 
 ---
 
-### ![](https://api.iconify.design/mdi:rocket-launch-outline.svg?color=%23000000&width=18&height=18#gh-light-mode-only)![](https://api.iconify.design/mdi:rocket-launch-outline.svg?color=%23ffffff&width=18&height=18#gh-dark-mode-only) Quickstart
+<h3><picture><source media="(prefers-color-scheme: dark)" srcset="docs/icons/quickstart-white.svg"><img alt="" src="docs/icons/quickstart-black.svg" width="16" height="16"></picture> Quickstart</h3>
 
 Prebuilt releases include a ZIP of the compiled extension (contents of `dist/`). Read below if you want to build from source.
 
@@ -64,7 +64,7 @@ After setting up the Extension you can just browse the internet and whenever you
 
 ---
 
-### ![](https://api.iconify.design/mdi:console-line.svg?color=%23000000&width=18&height=18#gh-light-mode-only)![](https://api.iconify.design/mdi:console-line.svg?color=%23ffffff&width=18&height=18#gh-dark-mode-only) Build from source
+<h3><picture><source media="(prefers-color-scheme: dark)" srcset="docs/icons/build-white.svg"><img alt="" src="docs/icons/build-black.svg" width="16" height="16"></picture> Build from source</h3>
 
 1. Clone this repository:
 
@@ -88,7 +88,7 @@ pnpm run build
 
 ---
 
-### ![](https://api.iconify.design/mdi:fingerprint.svg?color=%23000000&width=18&height=18#gh-light-mode-only)![](https://api.iconify.design/mdi:fingerprint.svg?color=%23ffffff&width=18&height=18#gh-dark-mode-only) Privacy
+<h3><picture><source media="(prefers-color-scheme: dark)" srcset="docs/icons/privacy-white.svg"><img alt="" src="docs/icons/privacy-black.svg" width="16" height="16"></picture> Privacy</h3>
 
 Data handling:
 
@@ -97,7 +97,7 @@ Data handling:
 - Sent to your configured Norish instance during import: recipe URL and API key.
 - **Not** sent: analytics, tracking data, or data to third-party services.
 
-### ![](https://api.iconify.design/mdi:flag.svg?color=%23000000&width=18&height=18#gh-light-mode-only)![](https://api.iconify.design/mdi:flag.svg?color=%23ffffff&width=18&height=18#gh-dark-mode-only) Permissions
+<h3><picture><source media="(prefers-color-scheme: dark)" srcset="docs/icons/permissions-white.svg"><img alt="" src="docs/icons/permissions-black.svg" width="16" height="16"></picture> Permissions</h3>
 
 The extension currently requests:
 
@@ -107,7 +107,7 @@ The extension currently requests:
 
 ---
 
-### ![](https://api.iconify.design/mdi:shield-alert-outline.svg?color=%23000000&width=18&height=18#gh-light-mode-only)![](https://api.iconify.design/mdi:shield-alert-outline.svg?color=%23ffffff&width=18&height=18#gh-dark-mode-only) License
+<h3><picture><source media="(prefers-color-scheme: dark)" srcset="docs/icons/license-white.svg"><img alt="" src="docs/icons/license-black.svg" width="16" height="16"></picture> License</h3>
 
 - This repository is licensed under the MIT License. See the `LICENSE` file for details.
 
