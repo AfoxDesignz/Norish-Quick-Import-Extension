@@ -3,14 +3,23 @@ import Settings from "./pages/Settings";
 import Home from "./pages/Home";
 import type { StoredConfig } from "./types/storage";
 import { getChromeRuntimeError, isExtensionContextValid } from "./lib/chrome";
+import { useTheme } from "./hooks/useTheme";
 
 type Page = "loading" | "settings" | "home";
 
 export default function App() {
+  const { themeMode, setThemeMode } = useTheme();
   const [page, setPage] = useState<Page>(() =>
     isExtensionContextValid() ? "loading" : "settings",
   );
   const [config, setConfig] = useState<StoredConfig>({});
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.remove("light", "dark");
+    root.classList.add(themeMode);
+    root.setAttribute("data-theme", themeMode);
+  }, [themeMode]);
 
   useEffect(() => {
     if (!isExtensionContextValid()) return;
@@ -62,6 +71,8 @@ export default function App() {
       <Settings
         onNavigateHome={handleSettingsSaved}
         canGoHome={!!(config.instanceDomain && config.apiKey)}
+        themeMode={themeMode}
+        onThemeModeChange={setThemeMode}
       />
     );
   }

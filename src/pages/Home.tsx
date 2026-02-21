@@ -27,7 +27,7 @@ export default function Home({ config, onNavigateSettings }: HomeProps) {
           }}
           aria-label="Open settings"
         >
-          <Cog6ToothIcon className="size-4 transition-transform duration-300 ease-out group-hover:rotate-30 group-hover:scale-100" />
+          <Cog6ToothIcon className="size-4 text-foreground transition-transform duration-300 ease-out group-hover:rotate-30 group-hover:scale-100" />
         </Button>
       </div>
       <RecipeImportForm config={config} />
