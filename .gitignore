@@ -1,48 +1,25 @@
-# Node modules
-node_modules/
-
 # Logs
+logs
+*.log
 npm-debug.log*
 yarn-debug.log*
+yarn-error.log*
 pnpm-debug.log*
-*.log
+lerna-debug.log*
 
-# pnpm/plug'n'play
-.pnp/
-.pnp.js
-
-# Build outputs
-dist/
-build/
-out/
-
-# Cache / tooling
-.cache/
-.parcel-cache/
-.turbo/
-coverage/
-
-# TypeScript
-*.tsbuildinfo
+node_modules
+dist
+dist-ssr
+*.local
+*.zip
 
 # Editor directories and files
-.vscode/
-.idea/
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
 *.suo
 *.ntvs*
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# Env files
-.env
-.env.local
-.env.*.local
-
-# Common bundler outputs (avoid committing generated files in repo root)
-background.js
-popup.js
-
-# Archives
-*.zip
+*.njsproj
+*.sln
+*.sw?
