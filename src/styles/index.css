@@ -1,0 +1,17 @@
+@import url("https://fonts.googleapis.com/css?family=Google+Sans&display=swap");
+@import "tailwindcss";
+@import "@heroui/styles";
+@import "./theme.css";
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family:
+    "Google Sans",
+    "Inter",
+    system-ui,
+    -apple-system,
+    sans-serif;
+  overflow-x: hidden;
+  padding: 16px;
+}
