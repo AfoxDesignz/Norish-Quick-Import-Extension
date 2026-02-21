@@ -24,7 +24,7 @@ Save recipes from any website into [Norish](https://github.com/norish-recipes/no
 
 **Planned**
 
-- Improve the popup UI
+- Add a `Test Connection` feature
 - Add more functionality
 
 ---

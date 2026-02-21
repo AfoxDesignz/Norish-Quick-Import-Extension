@@ -7,6 +7,7 @@ import {
   Form,
   InputGroup,
 } from "@heroui/react";
+import { EyeIcon, EyeSlashIcon } from "@heroicons/react/16/solid";
 import { useSettings } from "../hooks/useSettings";
 
 interface SettingsFormProps {
@@ -18,6 +19,7 @@ export default function SettingsForm({ onSaved }: SettingsFormProps) {
   const [domain, setDomain] = useState(settings.instanceDomain ?? "");
   const [apiKey, setApiKey] = useState(settings.apiKey ?? "");
   const [isSaving, setIsSaving] = useState(false);
+  const [isApiKeyVisible, setIsApiKeyVisible] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [didHydrateFromSettings, setDidHydrateFromSettings] = useState(false);
 
@@ -94,11 +96,30 @@ export default function SettingsForm({ onSaved }: SettingsFormProps) {
         onChange={setApiKey}
         isRequired
         name="apiKey"
-        type="password"
       >
         <Label>API Key</Label>
         <InputGroup fullWidth>
-          <InputGroup.Input className="text-sm" placeholder="Your API key" />
+          <InputGroup.Input
+            className="text-sm"
+            placeholder="Your API key"
+            type={isApiKeyVisible ? "text" : "password"}
+          />
+          <InputGroup.Suffix className="pr-0">
+            <Button
+              isIconOnly
+              size="sm"
+              variant="ghost"
+              className="group hover:!bg-default-300/50"
+              aria-label={isApiKeyVisible ? "Hide API key" : "Show API key"}
+              onPress={() => setIsApiKeyVisible((prev) => !prev)}
+            >
+              {isApiKeyVisible ? (
+                <EyeSlashIcon className="size-4 text-foreground" />
+              ) : (
+                <EyeIcon className="size-4 text-foreground" />
+              )}
+            </Button>
+          </InputGroup.Suffix>
         </InputGroup>
         <FieldError />
       </TextField>
