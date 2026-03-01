@@ -27,7 +27,7 @@ import {
   type NorishTrpcClient,
   type PendingImportItem,
 } from "../lib/api";
-import { isExtensionContextValid } from "../lib/chrome";
+import { isExtensionContextValid, setActionBadge } from "../lib/chrome";
 
 interface RecipeImportFormProps {
   config: Required<StoredConfig>;
@@ -118,6 +118,12 @@ function fromStoredImport(
   }
 }
 
+function toBadgeState(status: Status): "success" | "error" | "clear" {
+  if (status.type === "success") return "success";
+  if (status.type === "error") return "error";
+  return "clear";
+}
+
 export default function RecipeImportForm({ config }: RecipeImportFormProps) {
   const tabUrl = useCurrentTabUrl();
   const [recipeUrl, setRecipeUrl] = useState("");
@@ -157,6 +163,7 @@ export default function RecipeImportForm({ config }: RecipeImportFormProps) {
     (nextStatus: Status) => {
       setStatus(nextStatus);
       persistStatus(nextStatus);
+      setActionBadge(toBadgeState(nextStatus));
     },
     [persistStatus],
   );
@@ -164,6 +171,7 @@ export default function RecipeImportForm({ config }: RecipeImportFormProps) {
   const clearStatus = useCallback(() => {
     activeRecipeIdRef.current = null;
     setStatus({ type: "idle" });
+    setActionBadge("clear");
     if (!isExtensionContextValid()) return;
     chrome.storage.local.remove("lastImport");
   }, []);
@@ -316,6 +324,7 @@ export default function RecipeImportForm({ config }: RecipeImportFormProps) {
     const updateFromStorage = (res: { lastImport?: StoredImport }) => {
       const next = fromStoredImport(res.lastImport, config.instanceDomain);
       setStatus(next);
+      setActionBadge(toBadgeState(next));
 
       if (next.type === "pending" || next.type === "parsing") {
         activeRecipeIdRef.current = next.recipeId ?? null;
