@@ -1,6 +1,10 @@
 import { getChromeRuntimeError, setActionBadge } from "./lib/chrome";
 import type { StoredConfig } from "./types/storage";
 import {
+  isImportInProgress,
+  type StoredImport,
+} from "./types/importStatus";
+import {
   createNorishClient,
   extractErrorMessage,
   normalizeToDomain,
@@ -10,13 +14,6 @@ import {
   type NorishTrpcClient,
   type PendingImportItem,
 } from "./lib/api";
-
-type StoredImport = {
-  status: "loading" | "pending" | "parsing" | "success" | "error";
-  recipeId?: string;
-  message?: string;
-  timestamp?: number;
-};
 
 const IMPORT_STATUS_SYNC_ALARM = "norish-import-monitor";
 const IMPORT_STATUS_POLL_INTERVAL_MINUTES = 1;
@@ -30,13 +27,6 @@ function stopSubscriptions() {
     unsubscribeRef = null;
   }
   activeRecipeId = null;
-}
-
-function isImportInProgress(lastImport: StoredImport | undefined): boolean {
-  return (
-    !!lastImport?.recipeId &&
-    (lastImport.status === "pending" || lastImport.status === "parsing")
-  );
 }
 
 function syncBadgeWithImportStatus(lastImport: StoredImport | undefined): void {
