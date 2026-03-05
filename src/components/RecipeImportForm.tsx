@@ -21,13 +21,9 @@ import {
   createNorishClient,
   defaultOriginForDomain,
   extractErrorMessage,
-  type FailedEvent,
-  type ImportedEvent,
-  type ImportStartedEvent,
-  type NorishTrpcClient,
-  type PendingImportItem,
 } from "../lib/api";
-import { isExtensionContextValid, setActionBadge } from "../lib/chrome";
+import { isExtensionContextValid } from "../lib/chrome";
+import type { StoredImport } from "../types/importStatus";
 
 interface RecipeImportFormProps {
   config: Required<StoredConfig>;
@@ -40,14 +36,8 @@ type Status =
   | { type: "loading" }
   | { type: "parsing"; recipeId?: string; message?: string }
   | { type: "pending"; recipeId: string; message?: string }
-  | { type: "success"; recipeId?: string; domain: string }
+  | { type: "success"; recipeId?: string }
   | { type: "error"; message: string; recipeId?: string };
-
-type StoredImport = {
-  status: string;
-  recipeId?: string;
-  message?: string;
-};
 
 function toStoredImport(status: Status): StoredImport | null {
   switch (status.type) {
@@ -78,10 +68,7 @@ function toStoredImport(status: Status): StoredImport | null {
   }
 }
 
-function fromStoredImport(
-  last: StoredImport | undefined,
-  domain: string,
-): Status {
+function fromStoredImport(last: StoredImport | undefined): Status {
   if (!last) return { type: "idle" };
 
   switch (last.status) {
@@ -89,7 +76,6 @@ function fromStoredImport(
       return {
         type: "success",
         recipeId: last.recipeId,
-        domain,
       };
     case "error":
       return {
@@ -118,20 +104,11 @@ function fromStoredImport(
   }
 }
 
-function toBadgeState(status: Status): "success" | "error" | "clear" {
-  if (status.type === "success") return "success";
-  if (status.type === "error") return "error";
-  return "clear";
-}
-
 export default function RecipeImportForm({ config }: RecipeImportFormProps) {
   const tabUrl = useCurrentTabUrl();
   const [recipeUrl, setRecipeUrl] = useState("");
   const [status, setStatus] = useState<Status>({ type: "idle" });
   const planeRef = useRef<PaperAirplaneIconHandle>(null);
-  const activeRecipeIdRef = useRef<string | null>(null);
-  const clientRef = useRef<NorishTrpcClient | null>(null);
-  const unsubscribeRef = useRef<(() => void) | null>(null);
   const [instanceOrigin, setInstanceOrigin] = useState(() =>
     defaultOriginForDomain(config.instanceDomain),
   );
@@ -163,173 +140,38 @@ export default function RecipeImportForm({ config }: RecipeImportFormProps) {
     (nextStatus: Status) => {
       setStatus(nextStatus);
       persistStatus(nextStatus);
-      setActionBadge(toBadgeState(nextStatus));
     },
     [persistStatus],
   );
 
   const clearStatus = useCallback(() => {
-    activeRecipeIdRef.current = null;
     setStatus({ type: "idle" });
-    setActionBadge("clear");
     if (!isExtensionContextValid()) return;
     chrome.storage.local.remove("lastImport");
   }, []);
 
-  const stopSubscriptions = useCallback(() => {
-    unsubscribeRef.current?.();
-    unsubscribeRef.current = null;
-  }, []);
-
-  const ensureClient = useCallback(async (): Promise<NorishTrpcClient> => {
-    if (clientRef.current) {
-      return clientRef.current;
-    }
-
+  const loadClient = useCallback(async () => {
     const { client, origin } = await createNorishClient(config);
     setInstanceOrigin(origin);
-    clientRef.current = client;
     return client;
   }, [config]);
 
-  const startSubscriptions = useCallback(
-    (client: NorishTrpcClient) => {
-      stopSubscriptions();
-      const handleSubscriptionError = (error: unknown) => {
-        const activeId = activeRecipeIdRef.current;
-        if (!activeId) return;
-
-        activeRecipeIdRef.current = null;
-        setStatusAndPersist({
-          type: "error",
-          recipeId: activeId,
-          message: extractErrorMessage(error),
-        });
-      };
-
-      const onImportStarted = client.subscription(
-        "recipes.onImportStarted",
-        undefined,
-        {
-          onData: (data) => {
-            const payload = data as ImportStartedEvent;
-            if (
-              !activeRecipeIdRef.current ||
-              payload.recipeId !== activeRecipeIdRef.current
-            )
-              return;
-
-            setStatusAndPersist({
-              type: "parsing",
-              recipeId: payload.recipeId,
-              message: "Norish is processing your recipe.",
-            });
-          },
-          onError: handleSubscriptionError,
-        },
-      );
-
-      const onImported = client.subscription("recipes.onImported", undefined, {
-        onData: (data) => {
-          const payload = data as ImportedEvent;
-          const activeId = activeRecipeIdRef.current;
-          if (!activeId) return;
-
-          const matches =
-            payload.pendingRecipeId === activeId ||
-            payload.recipe?.id === activeId;
-          if (!matches) return;
-
-          activeRecipeIdRef.current = null;
-          setStatusAndPersist({
-            type: "success",
-            recipeId: payload.recipe.id,
-            domain: config.instanceDomain,
-          });
-        },
-        onError: handleSubscriptionError,
-      });
-
-      const onFailed = client.subscription("recipes.onFailed", undefined, {
-        onData: (data) => {
-          const payload = data as FailedEvent;
-          if (
-            !activeRecipeIdRef.current ||
-            payload.recipeId !== activeRecipeIdRef.current
-          )
-            return;
-
-          activeRecipeIdRef.current = null;
-          setStatusAndPersist({
-            type: "error",
-            recipeId: payload.recipeId,
-            message: payload.reason || "Import failed",
-          });
-        },
-        onError: handleSubscriptionError,
-      });
-
-      unsubscribeRef.current = () => {
-        onImportStarted.unsubscribe();
-        onImported.unsubscribe();
-        onFailed.unsubscribe();
-      };
-    },
-    [config.instanceDomain, setStatusAndPersist, stopSubscriptions],
-  );
-
-  const hydratePendingState = useCallback(async () => {
-    const activeId = activeRecipeIdRef.current;
-    if (!activeId || !clientRef.current) return;
-
-    try {
-      const pending = (await clientRef.current.query(
-        "recipes.getPending",
-      )) as PendingImportItem[];
-      const isPending = pending.some((entry) => entry.recipeId === activeId);
-
-      if (isPending && status.type !== "parsing") {
-        setStatusAndPersist({
-          type: "parsing",
-          recipeId: activeId,
-          message: "Norish is processing your recipe.",
-        });
-        return;
-      }
-
-      if (
-        !isPending &&
-        (status.type === "pending" || status.type === "parsing")
-      ) {
-        const recipe = (await clientRef.current.query("recipes.get", {
-          id: activeId,
-        })) as { id: string } | null;
-        if (recipe?.id) {
-          activeRecipeIdRef.current = null;
-          setStatusAndPersist({
-            type: "success",
-            recipeId: recipe.id,
-            domain: config.instanceDomain,
-          });
-        }
-      }
-    } catch {
-      // Ignore
-    }
-  }, [config.instanceDomain, setStatusAndPersist, status.type]);
+  const requestBackgroundMonitor = useCallback(() => {
+    if (!isExtensionContextValid()) return;
+    chrome.runtime.sendMessage({ type: "monitor-import-now" }, () => {
+      // Ignore runtime errors if service worker is unavailable.
+      void chrome.runtime.lastError;
+    });
+  }, []);
 
   useEffect(() => {
     if (!isExtensionContextValid()) return;
 
     const updateFromStorage = (res: { lastImport?: StoredImport }) => {
-      const next = fromStoredImport(res.lastImport, config.instanceDomain);
+      const next = fromStoredImport(res.lastImport);
       setStatus(next);
-      setActionBadge(toBadgeState(next));
-
       if (next.type === "pending" || next.type === "parsing") {
-        activeRecipeIdRef.current = next.recipeId ?? null;
-      } else {
-        activeRecipeIdRef.current = null;
+        requestBackgroundMonitor();
       }
     };
 
@@ -349,10 +191,9 @@ export default function RecipeImportForm({ config }: RecipeImportFormProps) {
 
     chrome.storage.onChanged.addListener(listener);
     return () => chrome.storage.onChanged.removeListener(listener);
-  }, [config.instanceDomain]);
+  }, [config.instanceDomain, requestBackgroundMonitor]);
 
   useEffect(() => {
-    if (clientRef.current) return;
     setInstanceOrigin(defaultOriginForDomain(config.instanceDomain));
   }, [config.instanceDomain]);
 
@@ -361,50 +202,6 @@ export default function RecipeImportForm({ config }: RecipeImportFormProps) {
       setRecipeUrl(tabUrl);
     }
   }, [tabUrl, recipeUrl]);
-
-  useEffect(() => {
-    const isTrackingImport =
-      status.type === "pending" || status.type === "parsing";
-    if (!isTrackingImport) {
-      stopSubscriptions();
-      return;
-    }
-
-    let cancelled = false;
-
-    (async () => {
-      try {
-        const client = await ensureClient();
-        if (cancelled) return;
-
-        startSubscriptions(client);
-        await hydratePendingState();
-      } catch {
-        // Ignore
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-      stopSubscriptions();
-    };
-  }, [
-    ensureClient,
-    hydratePendingState,
-    startSubscriptions,
-    status.type,
-    stopSubscriptions,
-  ]);
-
-  useEffect(() => {
-    if (!clientRef.current || !activeRecipeIdRef.current) return;
-
-    const interval = window.setInterval(() => {
-      void hydratePendingState();
-    }, 7000);
-
-    return () => window.clearInterval(interval);
-  }, [hydratePendingState, status.type]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -416,25 +213,23 @@ export default function RecipeImportForm({ config }: RecipeImportFormProps) {
     planeRef.current?.startAnimation();
 
     try {
-      const client = await ensureClient();
+      const client = await loadClient();
 
       const recipeId = (await client.mutation("recipes.importFromUrl", {
         url: trimmed,
         forceAI: false,
       })) as string;
 
-      activeRecipeIdRef.current = recipeId;
-      startSubscriptions(client);
       setStatusAndPersist({
         type: "pending",
         recipeId,
         message: "Import queued. Waiting for parser status...",
       });
+      requestBackgroundMonitor();
     } catch (error) {
       setStatusAndPersist({
         type: "error",
         message: extractErrorMessage(error),
-        recipeId: activeRecipeIdRef.current ?? undefined,
       });
     } finally {
       const elapsed = Date.now() - animationStartedAt;
