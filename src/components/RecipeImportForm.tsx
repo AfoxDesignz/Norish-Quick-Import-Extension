@@ -44,7 +44,7 @@ function toStoredImport(status: Status): StoredImport | null {
     case "idle":
       return null;
     case "loading":
-      return { status: "loading" };
+      return null;
     case "parsing":
       return {
         status: "parsing",
@@ -98,7 +98,7 @@ function fromStoredImport(last: StoredImport | undefined): Status {
         message: last.message,
       };
     case "loading":
-      return { type: "loading" };
+      return { type: "idle" };
     default:
       return { type: "idle" };
   }
