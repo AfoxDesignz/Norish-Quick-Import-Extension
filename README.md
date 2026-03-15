@@ -24,8 +24,12 @@ Save recipes from any website into [Norish](https://github.com/norish-recipes/no
 
 **Planned**
 
+- Firefox support
 - Add a `Test Connection` feature
 - Add more functionality
+
+> [!NOTE]
+> This extension is an independent project and is neither an official browser extension nor affiliated with the [Norish](https://github.com/norish-recipes/norish) project.
 
 ---
 
@@ -33,9 +37,6 @@ Save recipes from any website into [Norish](https://github.com/norish-recipes/no
 
 - Chromium-based browsers with Manifest V3 support (tested with recent Google Chrome and Vivaldi versions).
 - Firefox is currently not supported.
-
-> [!NOTE]
-> This extension is an independent project and is neither an official browser extension nor affiliated with the [Norish](https://github.com/norish-recipes/norish) project.
 
 ---
 
@@ -59,6 +60,14 @@ Prebuilt releases include a ZIP of the compiled extension (contents of `dist/`).
 7. Your browser will ask you, if you want to allow `Norish Quick Import` to access your configured Instance Domain. **Click `Allow`**.
 
 After setting up the Extension you can just browse the internet and whenever you find a recipe, that's worth saving into [Norish](https://github.com/norish-recipes/norish), just click the extension icon and hit `send`-Button.
+
+
+<h3><picture><source media="(prefers-color-scheme: dark)" srcset="docs/icons/update-white.svg"><img alt="" src="docs/icons/update-black.svg" width="16" height="16"></picture> Update & Reload</h3>
+
+A short guide to update or reload the extension without losing your settings.
+
+- **If you're using the Release ZIP / Load unpacked workflow**: unzip the new release into the same folder you originally loaded (overwrite files), then open `chrome://extensions` and click the **Reload** button for "Norish Quick Import". Reloading preserves storage for the same installed extension ID.
+- **If you remove and re-add the extension or load from a different folder**: the browser may assign a new extension ID and stored sttings may not carry over.
 
 > [!TIP]
 > If you encounter any problem or have a question, feel free to create an [issue](https://github.com/AfoxDesignz/Norish-Quick-Import-Extension/issues/new).
