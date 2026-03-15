@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "prebuild": "node scripts/sync-manifest-version.mjs",
+    "prebuild": "node scripts/sync-manifest-version.mjs && prettier --write public/manifest.json",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "format": "prettier --write .",
