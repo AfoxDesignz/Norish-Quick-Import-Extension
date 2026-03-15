@@ -12,7 +12,9 @@ export interface StoredImport {
   timestamp?: number;
 }
 
-export function isImportInProgress(lastImport: StoredImport | undefined): boolean {
+export function isImportInProgress(
+  lastImport: StoredImport | undefined,
+): boolean {
   return (
     !!lastImport?.recipeId &&
     (lastImport.status === "pending" || lastImport.status === "parsing")

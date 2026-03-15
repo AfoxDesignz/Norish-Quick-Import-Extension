@@ -16,7 +16,10 @@ export function getChromeRuntimeError(): string | null {
 
 export type ActionBadgeState = "success" | "error" | "clear";
 
-function getThemeColor(variableName: "--success" | "--danger", fallback: string): string {
+function getThemeColor(
+  variableName: "--success" | "--danger",
+  fallback: string,
+): string {
   try {
     if (typeof document === "undefined") return fallback;
     const value = getComputedStyle(document.documentElement)

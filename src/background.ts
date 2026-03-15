@@ -1,9 +1,6 @@
 import { getChromeRuntimeError, setActionBadge } from "./lib/chrome";
 import type { StoredConfig } from "./types/storage";
-import {
-  isImportInProgress,
-  type StoredImport,
-} from "./types/importStatus";
+import { isImportInProgress, type StoredImport } from "./types/importStatus";
 import {
   createNorishClient,
   extractErrorMessage,
