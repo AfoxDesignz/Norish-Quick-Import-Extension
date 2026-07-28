@@ -173,7 +173,7 @@ let isSyncing = false;
 
 async function syncImportStatusInBackground(): Promise<void> {
   if (isSyncing) return;
-  
+
   const lastImport = await getLastImport();
   if (!lastImport || !isImportInProgress(lastImport)) {
     syncBadgeWithImportStatus(lastImport);
@@ -183,69 +183,68 @@ async function syncImportStatusInBackground(): Promise<void> {
 
   isSyncing = true;
   try {
+    const recipeId = lastImport.recipeId;
+    if (!recipeId) {
+      await syncImportMonitorAlarm();
+      return;
+    }
 
-  const recipeId = lastImport.recipeId;
-  if (!recipeId) {
-    await syncImportMonitorAlarm();
-    return;
-  }
+    const config = await getConfig();
+    const domain = normalizeToDomain(config.instanceDomain);
+    if (!domain || !config.apiKey) {
+      await syncImportMonitorAlarm();
+      return;
+    }
 
-  const config = await getConfig();
-  const domain = normalizeToDomain(config.instanceDomain);
-  if (!domain || !config.apiKey) {
-    await syncImportMonitorAlarm();
-    return;
-  }
+    let baseUrl: string;
+    let apiKey: string;
+    try {
+      const apiConfig = await createNorishClient({
+        instanceDomain: config.instanceDomain as string,
+        apiKey: config.apiKey as string,
+      } as Required<StoredConfig>);
+      baseUrl = apiConfig.baseUrl;
+      apiKey = apiConfig.apiKey;
+    } catch {
+      await syncImportMonitorAlarm();
+      return;
+    }
 
-  let baseUrl: string;
-  let apiKey: string;
-  try {
-    const apiConfig = await createNorishClient({
-      instanceDomain: config.instanceDomain as string,
-      apiKey: config.apiKey as string,
-    } as Required<StoredConfig>);
-    baseUrl = apiConfig.baseUrl;
-    apiKey = apiConfig.apiKey;
-  } catch {
-    await syncImportMonitorAlarm();
-    return;
-  }
-
-  // Update status to "parsing" while checking
-  if (lastImport.status !== "parsing") {
-    await persistLastImport({
-      status: "parsing",
-      recipeId,
-      message: "Norish is processing your recipe.",
-    });
-  }
-
-  try {
-    const found = await pollRecipeStatus(baseUrl, apiKey, recipeId);
-
-    if (found) {
+    // Update status to "parsing" while checking
+    if (lastImport.status !== "parsing") {
       await persistLastImport({
-        status: "success",
+        status: "parsing",
         recipeId,
+        message: "Norish is processing your recipe.",
       });
-    } else {
-      // Timeout without finding recipe
+    }
+
+    try {
+      const found = await pollRecipeStatus(baseUrl, apiKey, recipeId);
+
+      if (found) {
+        await persistLastImport({
+          status: "success",
+          recipeId,
+        });
+      } else {
+        // Timeout without finding recipe
+        await persistLastImport({
+          status: "error",
+          recipeId,
+          message: "Recipe import timed out. Please try again.",
+        });
+      }
+    } catch (error) {
+      const message = extractErrorMessage(error);
       await persistLastImport({
         status: "error",
         recipeId,
-        message: "Recipe import timed out. Please try again.",
+        message,
       });
     }
-  } catch (error) {
-    const message = extractErrorMessage(error);
-    await persistLastImport({
-      status: "error",
-      recipeId,
-      message,
-    });
-  }
 
-  await syncImportMonitorAlarm();
+    await syncImportMonitorAlarm();
   } finally {
     isSyncing = false;
   }

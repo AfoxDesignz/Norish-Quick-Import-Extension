@@ -136,7 +136,10 @@ export async function getRecipeStatus(
 
   // Return minimal recipe info (id and name at least)
   if (data && typeof data === "object" && "id" in data && "name" in data) {
-    return { id: (data as Record<string, unknown>).id as string, name: (data as Record<string, unknown>).name as string };
+    return {
+      id: (data as Record<string, unknown>).id as string,
+      name: (data as Record<string, unknown>).name as string,
+    };
   }
 
   throw new Error("Unexpected response format from recipe endpoint");
