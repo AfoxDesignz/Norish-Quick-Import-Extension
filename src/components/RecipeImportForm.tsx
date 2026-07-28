@@ -21,6 +21,7 @@ import {
   createNorishClient,
   defaultOriginForDomain,
   extractErrorMessage,
+  importRecipeFromUrl,
 } from "../lib/api";
 import { isExtensionContextValid } from "../lib/chrome";
 import type { StoredImport } from "../types/importStatus";
@@ -150,10 +151,10 @@ export default function RecipeImportForm({ config }: RecipeImportFormProps) {
     chrome.storage.local.remove("lastImport");
   }, []);
 
-  const loadClient = useCallback(async () => {
-    const { client, origin } = await createNorishClient(config);
-    setInstanceOrigin(origin);
-    return client;
+  const loadApiConfig = useCallback(async () => {
+    const apiConfig = await createNorishClient(config);
+    setInstanceOrigin(defaultOriginForDomain(config.instanceDomain));
+    return apiConfig;
   }, [config]);
 
   const requestBackgroundMonitor = useCallback(() => {
@@ -213,12 +214,9 @@ export default function RecipeImportForm({ config }: RecipeImportFormProps) {
     planeRef.current?.startAnimation();
 
     try {
-      const client = await loadClient();
+      const { baseUrl, apiKey } = await loadApiConfig();
 
-      const recipeId = (await client.mutation("recipes.importFromUrl", {
-        url: trimmed,
-        forceAI: false,
-      })) as string;
+      const recipeId = await importRecipeFromUrl(baseUrl, apiKey, trimmed);
 
       setStatusAndPersist({
         type: "pending",
