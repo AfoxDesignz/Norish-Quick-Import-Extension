@@ -1,17 +1,26 @@
-@import url("https://fonts.googleapis.com/css?family=Google+Sans&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
 @import "@heroui/styles";
 @import "./theme.css";
 
+html,
 body {
   background-color: var(--background);
   color: var(--foreground);
   font-family:
-    "Google Sans",
     "Inter",
     system-ui,
     -apple-system,
     sans-serif;
   overflow-x: hidden;
+  margin: 0;
   padding: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Norish Editorial Headline Font */
+.font-serif {
+  font-family: "Fraunces", Georgia, serif;
+  letter-spacing: -0.015em;
 }

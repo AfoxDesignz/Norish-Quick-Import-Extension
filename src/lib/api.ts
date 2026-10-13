@@ -257,3 +257,99 @@ export function extractErrorMessage(error: unknown): string {
 
   return message;
 }
+
+export interface TestConnectionResult {
+  ok: boolean;
+  message: string;
+  version?: string;
+}
+
+export async function testConnection(
+  domain: string,
+  apiKey: string,
+): Promise<TestConnectionResult> {
+  const normDomain = normalizeToDomain(domain);
+  const trimmedKey = apiKey.trim();
+
+  if (!normDomain || !trimmedKey) {
+    return { ok: false, message: "Please provide both domain and API key." };
+  }
+
+  const [origin] = candidateOrigins(normDomain);
+
+  try {
+    // 1. Verify API Key against an authenticated endpoint requiring ApiKeyAuth
+    let authRes = await fetch(`${origin}/api/v1/groceries`, {
+      method: "GET",
+      headers: {
+        "x-api-key": trimmedKey,
+      },
+    });
+
+    // If /groceries returned 404 (e.g. customized instance), try /recipes/search
+    if (authRes.status === 404) {
+      authRes = await fetch(`${origin}/api/v1/recipes/search`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": trimmedKey,
+        },
+        body: JSON.stringify({ limit: 1 }),
+      });
+    }
+
+    if (authRes.status === 401) {
+      return {
+        ok: false,
+        message: "Server reached, but the API key is invalid.",
+      };
+    }
+
+    if (authRes.status === 403) {
+      return {
+        ok: false,
+        message:
+          "Server reached, but the API key has insufficient permissions.",
+      };
+    }
+
+    if (!authRes.ok) {
+      return {
+        ok: false,
+        message: `Server returned HTTP ${authRes.status}`,
+      };
+    }
+
+    // 2. Authentication succeeded! Retrieve optional version information from /health
+    let versionStr = "";
+    try {
+      const healthRes = await fetch(`${origin}/api/v1/health`);
+      if (healthRes.ok) {
+        const data = (await healthRes.json().catch(() => ({}))) as Record<
+          string,
+          unknown
+        >;
+        const versionObj = data?.versions as Record<string, string> | undefined;
+        if (versionObj?.root) {
+          versionStr = versionObj.root;
+        }
+      }
+    } catch {
+      // Optional version check failed, but auth was successful
+    }
+
+    return {
+      ok: true,
+      message: `Authentication successful!${versionStr ? ` (v${versionStr})` : ""}`,
+      version: versionStr || undefined,
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      message:
+        err instanceof Error
+          ? `Could not connect: ${err.message}`
+          : "Host unreachable.",
+    };
+  }
+}

@@ -1,44 +1,47 @@
-import { Switch } from "@heroui/react";
+import { Button, Tooltip } from "@heroui/react";
 import { MoonIcon, SunIcon } from "@heroicons/react/20/solid";
 import type { ThemeMode } from "../hooks/useTheme";
 
 interface ThemeSwitchProps {
   themeMode: ThemeMode;
   onThemeModeChange: (themeMode: ThemeMode) => Promise<void>;
+  className?: string;
 }
 
 export default function ThemeSwitch({
   themeMode,
   onThemeModeChange,
+  className = "",
 }: ThemeSwitchProps) {
+  const isDark = themeMode === "dark";
+
   return (
-    <Switch
-      size="md"
-      aria-label="Toggle dark mode"
-      isSelected={themeMode === "dark"}
-      onChange={(isSelected) => {
-        void onThemeModeChange(isSelected ? "dark" : "light");
-      }}
-    >
-      {({ isSelected }) => (
-        <Switch.Control
-          className={`transition-colors duration-200 ${
-            isSelected ? "bg-primary-700" : "bg-default-300"
-          }`}
+    <Tooltip delay={300}>
+      <Tooltip.Trigger aria-label="Toggle theme">
+        <Button
+          isIconOnly
+          variant="ghost"
+          size="sm"
+          className={`rounded-full size-8 text-muted hover:text-foreground hover:bg-default-200/60 transition-colors ${className}`}
+          onPress={() => {
+            void onThemeModeChange(isDark ? "light" : "dark");
+          }}
+          aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
         >
-          <Switch.Thumb
-            className={isSelected ? "bg-content1 shadow-sm" : "shadow-sm"}
-          >
-            <Switch.Icon>
-              {isSelected ? (
-                <MoonIcon className="size-4 text-content1-foreground" />
-              ) : (
-                <SunIcon className="size-4 text-warning-600" />
-              )}
-            </Switch.Icon>
-          </Switch.Thumb>
-        </Switch.Control>
-      )}
-    </Switch>
+          {isDark ? (
+            <SunIcon className="size-4 text-warning transition-transform duration-200 rotate-0 hover:rotate-45" />
+          ) : (
+            <MoonIcon className="size-4 text-muted hover:text-foreground transition-transform duration-200 -rotate-12 hover:rotate-0" />
+          )}
+        </Button>
+      </Tooltip.Trigger>
+      <Tooltip.Content
+        showArrow
+        placement="bottom"
+        className="bg-surface text-foreground border border-border shadow-md rounded-xl px-2 py-1 text-xs"
+      >
+        {isDark ? "Light mode" : "Dark mode"}
+      </Tooltip.Content>
+    </Tooltip>
   );
 }

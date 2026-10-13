@@ -1,4 +1,4 @@
-import { Button } from "@heroui/react";
+import { Button, Tooltip } from "@heroui/react";
 import { ArrowLeftIcon } from "@heroicons/react/20/solid";
 import SettingsForm from "../components/SettingsForm";
 import VersionChip from "../components/VersionChip";
@@ -20,23 +20,35 @@ export default function Settings({
 }: SettingsProps) {
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-baseline gap-2">
+      {/* Header Bar */}
+      <header className="flex items-center justify-between w-full pb-1 border-b border-border/40">
+        <div className="flex items-center gap-2">
           {canGoHome && (
-            <Button
-              variant="ghost"
-              size="sm"
-              isIconOnly
-              className="group hover:!bg-default-300/50"
-              onPress={() => {
-                onNavigateHome();
-              }}
-              aria-label="Back to home"
-            >
-              <ArrowLeftIcon className="size-4 text-foreground transition-transform duration-300 ease-out group-hover:-translate-x-0.5" />
-            </Button>
+            <Tooltip delay={300}>
+              <Tooltip.Trigger aria-label="Back to home">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  isIconOnly
+                  className="rounded-full size-8 text-muted hover:text-foreground hover:bg-default-200/60 transition-colors group"
+                  onPress={onNavigateHome}
+                  aria-label="Back to home"
+                >
+                  <ArrowLeftIcon className="size-4 text-foreground transition-transform duration-200 ease-out group-hover:-translate-x-0.5" />
+                </Button>
+              </Tooltip.Trigger>
+              <Tooltip.Content
+                showArrow
+                placement="bottom"
+                className="bg-surface text-foreground border border-border shadow-md rounded-xl px-2 py-1 text-xs"
+              >
+                Back
+              </Tooltip.Content>
+            </Tooltip>
           )}
-          <h1 className="text-xl font-bold">Settings</h1>
+          <h1 className="font-serif text-lg font-semibold tracking-tight text-foreground">
+            Settings
+          </h1>
           <VersionChip />
         </div>
 
@@ -46,7 +58,9 @@ export default function Settings({
             onThemeModeChange={onThemeModeChange}
           />
         </div>
-      </div>
+      </header>
+
+      {/* Settings Form */}
       <SettingsForm onSaved={onNavigateHome} />
     </div>
   );
