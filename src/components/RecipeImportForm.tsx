@@ -42,6 +42,7 @@ type Status =
       recipeId?: string;
       recipeName?: string;
       recipeImage?: string;
+      alreadyExists?: boolean;
     }
   | { type: "error"; message: string; recipeId?: string };
 
@@ -69,6 +70,7 @@ function toStoredImport(status: Status): StoredImport | null {
         recipeId: status.recipeId,
         recipeName: status.recipeName,
         recipeImage: status.recipeImage,
+        alreadyExists: status.alreadyExists,
       };
     case "error":
       return {
@@ -89,6 +91,7 @@ function fromStoredImport(last: StoredImport | undefined): Status {
         recipeId: last.recipeId,
         recipeName: last.recipeName,
         recipeImage: last.recipeImage,
+        alreadyExists: last.alreadyExists,
       };
     case "error":
       return {
@@ -249,6 +252,7 @@ export default function RecipeImportForm({ config }: RecipeImportFormProps) {
           recipeId: result.recipeId,
           recipeName: result.recipeName,
           recipeImage: result.recipeImage,
+          alreadyExists: true,
         });
       } else {
         // recipe is being parsed, poll until ready
@@ -363,7 +367,9 @@ export default function RecipeImportForm({ config }: RecipeImportFormProps) {
         <Alert status="success" className="items-start">
           <Alert.Indicator />
           <Alert.Content className="min-w-0 flex-1">
-            <Alert.Title>Import successful</Alert.Title>
+            <Alert.Title>
+              {status.alreadyExists ? "Already exists" : "Import successful"}
+            </Alert.Title>
             <Alert.Description>
               <div className="flex flex-col gap-2 min-w-0 w-full mt-1">
                 {(status.recipeName || recipeImageUrl) && (

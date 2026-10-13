@@ -12,6 +12,7 @@ export interface StoredImport {
   timestamp?: number;
   recipeName?: string;
   recipeImage?: string;
+  alreadyExists?: boolean;
 }
 
 export function isImportInProgress(
