@@ -140,7 +140,7 @@ async function pollRecipeStatus(
   baseUrl: string,
   apiKey: string,
   recipeId: string,
-): Promise<boolean> {
+): Promise<{ id: string; name: string; image?: string | null } | null> {
   const startTime = Date.now();
 
   while (Date.now() - startTime < POLL_TIMEOUT_MS) {
@@ -149,7 +149,7 @@ async function pollRecipeStatus(
 
       if (recipe) {
         // Recipe found = success
-        return true;
+        return recipe;
       }
 
       // 404 = still parsing, continue polling
@@ -166,7 +166,7 @@ async function pollRecipeStatus(
   }
 
   // Timeout reached without finding recipe
-  return false;
+  return null;
 }
 
 let isSyncing = false;
@@ -220,12 +220,14 @@ async function syncImportStatusInBackground(): Promise<void> {
     }
 
     try {
-      const found = await pollRecipeStatus(baseUrl, apiKey, recipeId);
+      const recipe = await pollRecipeStatus(baseUrl, apiKey, recipeId);
 
-      if (found) {
+      if (recipe) {
         await persistLastImport({
           status: "success",
           recipeId,
+          recipeName: recipe.name,
+          recipeImage: recipe.image ?? undefined,
         });
       } else {
         // Timeout without finding recipe

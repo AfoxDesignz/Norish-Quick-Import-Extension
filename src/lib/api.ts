@@ -61,6 +61,26 @@ export interface ImportUrlResult {
    * "exists": recipe already existed; no polling required.
    */
   status: "queued" | "exists";
+  recipeName?: string;
+  recipeImage?: string;
+}
+
+function extractRecipeImage(d: Record<string, unknown>): string | null {
+  if (typeof d.image === "string" && d.image.trim()) {
+    return d.image.trim();
+  }
+  if (Array.isArray(d.images) && d.images.length > 0) {
+    const first = d.images[0];
+    if (first && typeof first === "object") {
+      const imgObj = first as Record<string, unknown>;
+      if (typeof imgObj.image === "string" && imgObj.image.trim()) {
+        return imgObj.image.trim();
+      }
+    } else if (typeof first === "string" && first.trim()) {
+      return first.trim();
+    }
+  }
+  return null;
 }
 
 /**
@@ -68,7 +88,7 @@ export interface ImportUrlResult {
  * @param baseUrl API base URL (e.g., https://norish.example.com/api/v1)
  * @param apiKey API authentication key
  * @param url Recipe URL to import
- * @returns ImportUrlResult with recipeId and whether it was queued or already existed
+ * @returns ImportUrlResult with recipeId, status, and optional recipe metadata
  */
 export async function importRecipeFromUrl(
   baseUrl: string,
@@ -108,10 +128,28 @@ export async function importRecipeFromUrl(
       (data as Record<string, unknown>).status === "exists")
   ) {
     const d = data as Record<string, unknown>;
-    return {
+    const result: ImportUrlResult = {
       recipeId: d.recipeId as string,
       status: d.status as "queued" | "exists",
     };
+
+    // extract metadata
+    if (
+      result.status === "exists" &&
+      d.recipe &&
+      typeof d.recipe === "object"
+    ) {
+      const recipe = d.recipe as Record<string, unknown>;
+      if (typeof recipe.name === "string") {
+        result.recipeName = recipe.name;
+      }
+      const img = extractRecipeImage(recipe);
+      if (img) {
+        result.recipeImage = img;
+      }
+    }
+
+    return result;
   }
 
   throw new Error("Unexpected response format from import endpoint");
@@ -128,7 +166,7 @@ export async function getRecipeStatus(
   baseUrl: string,
   apiKey: string,
   recipeId: string,
-): Promise<{ id: string; name: string } | null> {
+): Promise<{ id: string; name: string; image?: string | null } | null> {
   const endpoint = `${baseUrl}/recipes/${recipeId}`;
 
   const response = await fetch(endpoint, {
@@ -155,11 +193,13 @@ export async function getRecipeStatus(
     throw new Error(message);
   }
 
-  // Return minimal recipe info (id and name at least)
+  // Return minimal recipe info (id, name, and optional image)
   if (data && typeof data === "object" && "id" in data && "name" in data) {
+    const d = data as Record<string, unknown>;
     return {
-      id: (data as Record<string, unknown>).id as string,
-      name: (data as Record<string, unknown>).name as string,
+      id: d.id as string,
+      name: d.name as string,
+      image: extractRecipeImage(d),
     };
   }
 
@@ -189,6 +229,8 @@ function extractErrorMessageFromResponse(
       return "Access denied to this API";
     case 409:
       return "An import of this recipe is already in progress. Please wait and try again.";
+    case 412:
+      return "Video import not supported: AI or video parsing is not enabled on this Norish instance.";
     case 422:
       return "Invalid request (invalid URL format?)";
     case 503:

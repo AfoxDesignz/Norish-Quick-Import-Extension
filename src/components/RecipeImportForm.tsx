@@ -37,7 +37,12 @@ type Status =
   | { type: "loading" }
   | { type: "parsing"; recipeId?: string; message?: string }
   | { type: "pending"; recipeId: string; message?: string }
-  | { type: "success"; recipeId?: string }
+  | {
+      type: "success";
+      recipeId?: string;
+      recipeName?: string;
+      recipeImage?: string;
+    }
   | { type: "error"; message: string; recipeId?: string };
 
 function toStoredImport(status: Status): StoredImport | null {
@@ -59,7 +64,12 @@ function toStoredImport(status: Status): StoredImport | null {
         message: status.message,
       };
     case "success":
-      return { status: "success", recipeId: status.recipeId };
+      return {
+        status: "success",
+        recipeId: status.recipeId,
+        recipeName: status.recipeName,
+        recipeImage: status.recipeImage,
+      };
     case "error":
       return {
         status: "error",
@@ -77,6 +87,8 @@ function fromStoredImport(last: StoredImport | undefined): Status {
       return {
         type: "success",
         recipeId: last.recipeId,
+        recipeName: last.recipeName,
+        recipeImage: last.recipeImage,
       };
     case "error":
       return {
@@ -119,6 +131,18 @@ export default function RecipeImportForm({ config }: RecipeImportFormProps) {
       instanceOrigin || defaultOriginForDomain(config.instanceDomain);
     return `${origin.replace(/\/$/, "")}/recipes/`;
   }, [config.instanceDomain, instanceOrigin]);
+
+  const recipeImageUrl = useMemo(() => {
+    if (status.type !== "success" || !status.recipeImage) return null;
+    const img = status.recipeImage.trim();
+    if (!img) return null;
+    if (/^(https?:\/\/|data:image\/)/i.test(img)) {
+      return img;
+    }
+    const origin =
+      instanceOrigin || defaultOriginForDomain(config.instanceDomain);
+    return `${origin.replace(/\/$/, "")}${img.startsWith("/") ? "" : "/"}${img}`;
+  }, [status, instanceOrigin, config.instanceDomain]);
 
   const persistStatus = useCallback((nextStatus: Status) => {
     if (!isExtensionContextValid()) return;
@@ -220,7 +244,12 @@ export default function RecipeImportForm({ config }: RecipeImportFormProps) {
 
       if (result.status === "exists") {
         // recipe already existed
-        setStatusAndPersist({ type: "success", recipeId: result.recipeId });
+        setStatusAndPersist({
+          type: "success",
+          recipeId: result.recipeId,
+          recipeName: result.recipeName,
+          recipeImage: result.recipeImage,
+        });
       } else {
         // recipe is being parsed, poll until ready
         setStatusAndPersist({
@@ -333,21 +362,45 @@ export default function RecipeImportForm({ config }: RecipeImportFormProps) {
       {status.type === "success" && (
         <Alert status="success" className="items-start">
           <Alert.Indicator />
-          <Alert.Content>
+          <Alert.Content className="min-w-0 flex-1">
             <Alert.Title>Import successful</Alert.Title>
             <Alert.Description>
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-2 min-w-0 w-full mt-1">
+                {(status.recipeName || recipeImageUrl) && (
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    {recipeImageUrl && (
+                      <img
+                        src={recipeImageUrl}
+                        alt={status.recipeName ?? "Recipe cover"}
+                        referrerPolicy="no-referrer"
+                        className="size-10 rounded-md object-cover shrink-0 border border-default-200 bg-default-100"
+                        onError={() => {
+                          console.warn(
+                            "Failed to load recipe image:",
+                            recipeImageUrl,
+                          );
+                        }}
+                      />
+                    )}
+                    {status.recipeName && (
+                      <p
+                        className="font-medium text-xs leading-snug text-foreground line-clamp-2 break-words min-w-0"
+                        title={status.recipeName}
+                      >
+                        {status.recipeName}
+                      </p>
+                    )}
+                  </div>
+                )}
                 {status.recipeId && (
                   <Link
                     href={`${recipeBaseUrl}${status.recipeId}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="underline font-medium"
+                    className="underline font-medium text-xs inline-flex items-center gap-1 w-fit"
                   >
                     Open in Norish
-                    <span className="ml-1 inline-flex items-center justify-center align-middle">
-                      <ArrowTopRightOnSquareIcon className="size-4 shrink-0" />
-                    </span>
+                    <ArrowTopRightOnSquareIcon className="size-3.5 shrink-0" />
                   </Link>
                 )}
               </div>
