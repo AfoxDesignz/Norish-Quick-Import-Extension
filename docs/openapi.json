@@ -42,9 +42,7 @@
         "operationId": "health",
         "summary": "Check API health",
         "description": "Reports API availability and verifies both the database connection and internal parser service are healthy.",
-        "tags": [
-          "Health"
-        ],
+        "tags": ["Health"],
         "responses": {
           "200": {
             "description": "The API, database, and parser service are healthy.",
@@ -65,9 +63,7 @@
                           "const": "ok"
                         }
                       },
-                      "required": [
-                        "status"
-                      ],
+                      "required": ["status"],
                       "additionalProperties": false
                     },
                     "versions": {
@@ -98,11 +94,7 @@
                           "type": "string"
                         }
                       },
-                      "required": [
-                        "root",
-                        "apps",
-                        "packages"
-                      ],
+                      "required": ["root", "apps", "packages"],
                       "additionalProperties": false
                     },
                     "parser": {
@@ -116,18 +108,11 @@
                           "type": "string"
                         }
                       },
-                      "required": [
-                        "status"
-                      ],
+                      "required": ["status"],
                       "additionalProperties": false
                     }
                   },
-                  "required": [
-                    "status",
-                    "db",
-                    "versions",
-                    "parser"
-                  ],
+                  "required": ["status", "db", "versions", "parser"],
                   "additionalProperties": false
                 }
               }
@@ -150,9 +135,7 @@
       "get": {
         "operationId": "recipeGet",
         "summary": "Get a recipe by ID",
-        "tags": [
-          "Recipes"
-        ],
+        "tags": ["Recipes"],
         "security": [
           {
             "ApiKeyAuth": []
@@ -282,19 +265,13 @@
                     },
                     "systemUsed": {
                       "type": "string",
-                      "enum": [
-                        "metric",
-                        "us"
-                      ]
+                      "enum": ["metric", "us"]
                     },
                     "originalSystem": {
                       "anyOf": [
                         {
                           "type": "string",
-                          "enum": [
-                            "metric",
-                            "us"
-                          ]
+                          "enum": ["metric", "us"]
                         },
                         {
                           "type": "null"
@@ -404,12 +381,7 @@
                       "type": "array",
                       "items": {
                         "type": "string",
-                        "enum": [
-                          "Breakfast",
-                          "Lunch",
-                          "Dinner",
-                          "Snack"
-                        ]
+                        "enum": ["Breakfast", "Lunch", "Dinner", "Snack"]
                       }
                     },
                     "version": {
@@ -452,10 +424,7 @@
                           },
                           "systemUsed": {
                             "type": "string",
-                            "enum": [
-                              "metric",
-                              "us"
-                            ]
+                            "enum": ["metric", "us"]
                           },
                           "version": {
                             "type": "integer",
@@ -500,10 +469,7 @@
                           },
                           "systemUsed": {
                             "type": "string",
-                            "enum": [
-                              "metric",
-                              "us"
-                            ]
+                            "enum": ["metric", "us"]
                           },
                           "order": {
                             "type": "number"
@@ -533,12 +499,7 @@
                                   "type": "number"
                                 }
                               },
-                              "required": [
-                                "id",
-                                "image",
-                                "order",
-                                "version"
-                              ],
+                              "required": ["id", "image", "order", "version"],
                               "additionalProperties": false
                             }
                           },
@@ -558,11 +519,7 @@
                                   "type": "number"
                                 }
                               },
-                              "required": [
-                                "ingredientOrder",
-                                "share",
-                                "order"
-                              ],
+                              "required": ["ingredientOrder", "share", "order"],
                               "additionalProperties": false
                             }
                           }
@@ -591,10 +548,7 @@
                             "type": "number"
                           }
                         },
-                        "required": [
-                          "name",
-                          "version"
-                        ],
+                        "required": ["name", "version"],
                         "additionalProperties": false
                       }
                     },
@@ -616,11 +570,7 @@
                             "type": "number"
                           }
                         },
-                        "required": [
-                          "id",
-                          "name",
-                          "version"
-                        ],
+                        "required": ["id", "name", "version"],
                         "additionalProperties": false
                       }
                     },
@@ -656,10 +606,7 @@
                           "maximum": 9007199254740991
                         }
                       },
-                      "required": [
-                        "id",
-                        "version"
-                      ],
+                      "required": ["id", "version"],
                       "additionalProperties": false
                     },
                     "images": {
@@ -741,12 +688,7 @@
                             "type": "number"
                           }
                         },
-                        "required": [
-                          "id",
-                          "video",
-                          "order",
-                          "version"
-                        ],
+                        "required": ["id", "video", "order", "version"],
                         "additionalProperties": false
                       }
                     },
@@ -787,9 +729,7 @@
                               }
                             }
                           },
-                          "required": [
-                            "lines"
-                          ],
+                          "required": ["lines"],
                           "additionalProperties": false
                         },
                         {
@@ -865,9 +805,7 @@
         "operationId": "recipeSearch",
         "summary": "List recipes",
         "description": "Returns a paginated list of recipes. All filter fields are optional, so you can omit them to fetch the default recipe list.",
-        "tags": [
-          "Recipes"
-        ],
+        "tags": ["Recipes"],
         "security": [
           {
             "ApiKeyAuth": []
@@ -903,10 +841,7 @@
                     "type": "string"
                   },
                   "searchFields": {
-                    "default": [
-                      "title",
-                      "ingredients"
-                    ],
+                    "default": ["title", "ingredients"],
                     "description": "Fields searched when `search` is provided. Defaults to `title` and `ingredients`.",
                     "type": "array",
                     "items": {
@@ -932,22 +867,14 @@
                     "type": "array",
                     "items": {
                       "type": "string",
-                      "enum": [
-                        "Breakfast",
-                        "Lunch",
-                        "Dinner",
-                        "Snack"
-                      ]
+                      "enum": ["Breakfast", "Lunch", "Dinner", "Snack"]
                     }
                   },
                   "filterMode": {
                     "default": "OR",
                     "description": "How multi-value filters are combined. Defaults to `OR`.",
                     "type": "string",
-                    "enum": [
-                      "AND",
-                      "OR"
-                    ]
+                    "enum": ["AND", "OR"]
                   },
                   "sortMode": {
                     "default": "dateDesc",
@@ -1123,12 +1050,7 @@
                             "type": "array",
                             "items": {
                               "type": "string",
-                              "enum": [
-                                "Breakfast",
-                                "Lunch",
-                                "Dinner",
-                                "Snack"
-                              ]
+                              "enum": ["Breakfast", "Lunch", "Dinner", "Snack"]
                             }
                           },
                           "version": {
@@ -1149,10 +1071,7 @@
                                   "type": "number"
                                 }
                               },
-                              "required": [
-                                "name",
-                                "version"
-                              ],
+                              "required": ["name", "version"],
                               "additionalProperties": false
                             }
                           },
@@ -1188,10 +1107,7 @@
                                 "maximum": 9007199254740991
                               }
                             },
-                            "required": [
-                              "id",
-                              "version"
-                            ],
+                            "required": ["id", "version"],
                             "additionalProperties": false
                           },
                           "averageRating": {
@@ -1249,11 +1165,7 @@
                       ]
                     }
                   },
-                  "required": [
-                    "recipes",
-                    "total",
-                    "nextCursor"
-                  ],
+                  "required": ["recipes", "total", "nextCursor"],
                   "additionalProperties": false
                 }
               }
@@ -1277,9 +1189,7 @@
         "operationId": "recipeCreate",
         "summary": "Create a recipe",
         "description": "Creates a recipe directly from structured recipe data without parser transformation.",
-        "tags": [
-          "Recipes"
-        ],
+        "tags": ["Recipes"],
         "security": [
           {
             "ApiKeyAuth": []
@@ -1382,19 +1292,13 @@
                   },
                   "systemUsed": {
                     "type": "string",
-                    "enum": [
-                      "metric",
-                      "us"
-                    ]
+                    "enum": ["metric", "us"]
                   },
                   "originalSystem": {
                     "anyOf": [
                       {
                         "type": "string",
-                        "enum": [
-                          "metric",
-                          "us"
-                        ]
+                        "enum": ["metric", "us"]
                       },
                       {
                         "type": "null"
@@ -1498,12 +1402,7 @@
                     "type": "array",
                     "items": {
                       "type": "string",
-                      "enum": [
-                        "Breakfast",
-                        "Lunch",
-                        "Dinner",
-                        "Snack"
-                      ]
+                      "enum": ["Breakfast", "Lunch", "Dinner", "Snack"]
                     }
                   },
                   "version": {
@@ -1552,10 +1451,7 @@
                         },
                         "systemUsed": {
                           "type": "string",
-                          "enum": [
-                            "metric",
-                            "us"
-                          ]
+                          "enum": ["metric", "us"]
                         },
                         "version": {
                           "type": "integer",
@@ -1582,11 +1478,7 @@
                           ]
                         }
                       },
-                      "required": [
-                        "amount",
-                        "order",
-                        "ingredientId"
-                      ]
+                      "required": ["amount", "order", "ingredientId"]
                     }
                   },
                   "tags": {
@@ -1599,9 +1491,7 @@
                           "type": "string"
                         }
                       },
-                      "required": [
-                        "name"
-                      ]
+                      "required": ["name"]
                     }
                   },
                   "cuisines": {
@@ -1627,10 +1517,7 @@
                         },
                         "systemUsed": {
                           "type": "string",
-                          "enum": [
-                            "metric",
-                            "us"
-                          ]
+                          "enum": ["metric", "us"]
                         },
                         "version": {
                           "type": "integer",
@@ -1661,9 +1548,7 @@
                                 "maximum": 9007199254740991
                               }
                             },
-                            "required": [
-                              "image"
-                            ]
+                            "required": ["image"]
                           }
                         },
                         "stepIngredients": {
@@ -1684,17 +1569,11 @@
                                 "type": "number"
                               }
                             },
-                            "required": [
-                              "ingredientOrder"
-                            ]
+                            "required": ["ingredientOrder"]
                           }
                         }
                       },
-                      "required": [
-                        "step",
-                        "order",
-                        "systemUsed"
-                      ]
+                      "required": ["step", "order", "systemUsed"]
                     }
                   },
                   "images": {
@@ -1725,9 +1604,7 @@
                           "maximum": 9007199254740991
                         }
                       },
-                      "required": [
-                        "image"
-                      ]
+                      "required": ["image"]
                     }
                   },
                   "videos": {
@@ -1774,15 +1651,11 @@
                           "maximum": 9007199254740991
                         }
                       },
-                      "required": [
-                        "video"
-                      ]
+                      "required": ["video"]
                     }
                   }
                 },
-                "required": [
-                  "name"
-                ]
+                "required": ["name"]
               }
             }
           }
@@ -1817,9 +1690,7 @@
       "post": {
         "operationId": "recipeImportUrl",
         "summary": "Queue a recipe import from a URL",
-        "tags": [
-          "Recipe Imports"
-        ],
+        "tags": ["Recipe Imports"],
         "security": [
           {
             "ApiKeyAuth": []
@@ -1843,9 +1714,7 @@
                     "type": "boolean"
                   }
                 },
-                "required": [
-                  "url"
-                ]
+                "required": ["url"]
               }
             }
           }
@@ -1865,10 +1734,7 @@
                     },
                     "status": {
                       "type": "string",
-                      "enum": [
-                        "queued",
-                        "exists"
-                      ]
+                      "enum": ["queued", "exists"]
                     },
                     "recipe": {
                       "anyOf": [
@@ -2033,10 +1899,7 @@
                                     "type": "number"
                                   }
                                 },
-                                "required": [
-                                  "name",
-                                  "version"
-                                ],
+                                "required": ["name", "version"],
                                 "additionalProperties": false
                               }
                             },
@@ -2072,10 +1935,7 @@
                                   "maximum": 9007199254740991
                                 }
                               },
-                              "required": [
-                                "id",
-                                "version"
-                              ],
+                              "required": ["id", "version"],
                               "additionalProperties": false
                             },
                             "averageRating": {
@@ -2120,10 +1980,7 @@
                       ]
                     }
                   },
-                  "required": [
-                    "recipeId",
-                    "status"
-                  ],
+                  "required": ["recipeId", "status"],
                   "additionalProperties": false
                 }
               }
@@ -2166,9 +2023,7 @@
       "post": {
         "operationId": "recipeImportPaste",
         "summary": "Queue a recipe import from pasted text",
-        "tags": [
-          "Recipe Imports"
-        ],
+        "tags": ["Recipe Imports"],
         "security": [
           {
             "ApiKeyAuth": []
@@ -2194,9 +2049,7 @@
                     "type": "boolean"
                   }
                 },
-                "required": [
-                  "text"
-                ]
+                "required": ["text"]
               }
             }
           }
@@ -2219,9 +2072,7 @@
                       "description": "Created recipe IDs in source order. Single imports still return one ID in this array."
                     }
                   },
-                  "required": [
-                    "recipeIds"
-                  ],
+                  "required": ["recipeIds"],
                   "additionalProperties": false
                 }
               }
@@ -2254,9 +2105,7 @@
       "get": {
         "operationId": "groceryList",
         "summary": "Get all groceries",
-        "tags": [
-          "Groceries"
-        ],
+        "tags": ["Groceries"],
         "security": [
           {
             "ApiKeyAuth": []
@@ -2415,9 +2264,7 @@
       "post": {
         "operationId": "groceryCreate",
         "summary": "Create a grocery",
-        "tags": [
-          "Groceries"
-        ],
+        "tags": ["Groceries"],
         "security": [
           {
             "ApiKeyAuth": []
@@ -2481,11 +2328,7 @@
                     ]
                   }
                 },
-                "required": [
-                  "name",
-                  "unit",
-                  "amount"
-                ]
+                "required": ["name", "unit", "amount"]
               }
             }
           }
@@ -2640,9 +2483,7 @@
         "operationId": "groceryMarkDone",
         "summary": "Mark a grocery as done",
         "description": "Send the grocery's current `version` from the list. If it no longer matches, nothing changes and the response has `stale: true`: fetch the list again and retry.",
-        "tags": [
-          "Groceries"
-        ],
+        "tags": ["Groceries"],
         "security": [
           {
             "ApiKeyAuth": []
@@ -2676,9 +2517,7 @@
                     "maximum": 9007199254740991
                   }
                 },
-                "required": [
-                  "version"
-                ]
+                "required": ["version"]
               }
             }
           }
@@ -2826,10 +2665,7 @@
                       "type": "boolean"
                     }
                   },
-                  "required": [
-                    "grocery",
-                    "stale"
-                  ],
+                  "required": ["grocery", "stale"],
                   "additionalProperties": false
                 }
               }
@@ -2863,9 +2699,7 @@
         "operationId": "groceryMarkUndone",
         "summary": "Mark a grocery as not done",
         "description": "Send the grocery's current `version` from the list. If it no longer matches, nothing changes and the response has `stale: true`: fetch the list again and retry.",
-        "tags": [
-          "Groceries"
-        ],
+        "tags": ["Groceries"],
         "security": [
           {
             "ApiKeyAuth": []
@@ -2899,9 +2733,7 @@
                     "maximum": 9007199254740991
                   }
                 },
-                "required": [
-                  "version"
-                ]
+                "required": ["version"]
               }
             }
           }
@@ -3049,10 +2881,7 @@
                       "type": "boolean"
                     }
                   },
-                  "required": [
-                    "grocery",
-                    "stale"
-                  ],
+                  "required": ["grocery", "stale"],
                   "additionalProperties": false
                 }
               }
@@ -3086,9 +2915,7 @@
         "operationId": "groceryDelete",
         "summary": "Delete a grocery",
         "description": "Send the grocery's current `version` from the list. If it no longer matches, nothing changes and the response has `stale: true`: fetch the list again and retry.",
-        "tags": [
-          "Groceries"
-        ],
+        "tags": ["Groceries"],
         "security": [
           {
             "ApiKeyAuth": []
@@ -3134,10 +2961,7 @@
                       "type": "boolean"
                     }
                   },
-                  "required": [
-                    "success",
-                    "stale"
-                  ],
+                  "required": ["success", "stale"],
                   "additionalProperties": false
                 }
               }
@@ -3171,9 +2995,7 @@
         "operationId": "groceryAssignStore",
         "summary": "Assign a grocery to a store",
         "description": "Send the grocery's current `version` from the list; a stale version changes nothing and returns `stale: true`. A `storeId` of `null` removes the store. With `savePreference` (on by default) the same ingredient goes to this store next time.",
-        "tags": [
-          "Groceries"
-        ],
+        "tags": ["Groceries"],
         "security": [
           {
             "ApiKeyAuth": []
@@ -3223,10 +3045,7 @@
                     "type": "boolean"
                   }
                 },
-                "required": [
-                  "version",
-                  "storeId"
-                ]
+                "required": ["version", "storeId"]
               }
             }
           }
@@ -3374,10 +3193,7 @@
                       "type": "boolean"
                     }
                   },
-                  "required": [
-                    "grocery",
-                    "stale"
-                  ],
+                  "required": ["grocery", "stale"],
                   "additionalProperties": false
                 }
               }
@@ -3410,9 +3226,7 @@
       "get": {
         "operationId": "storeList",
         "summary": "List stores",
-        "tags": [
-          "Stores"
-        ],
+        "tags": ["Stores"],
         "security": [
           {
             "ApiKeyAuth": []
@@ -3547,9 +3361,7 @@
       "post": {
         "operationId": "storeCreate",
         "summary": "Create a store",
-        "tags": [
-          "Stores"
-        ],
+        "tags": ["Stores"],
         "security": [
           {
             "ApiKeyAuth": []
@@ -3612,9 +3424,7 @@
                     ]
                   }
                 },
-                "required": [
-                  "name"
-                ]
+                "required": ["name"]
               }
             }
           }
@@ -3755,9 +3565,7 @@
         "operationId": "plannedRecipesToday",
         "summary": "Get planned recipes for today",
         "description": "\"Today\" is the day in the server's timezone.",
-        "tags": [
-          "Planned Recipes"
-        ],
+        "tags": ["Planned Recipes"],
         "security": [
           {
             "ApiKeyAuth": []
@@ -3786,12 +3594,7 @@
                       },
                       "slot": {
                         "type": "string",
-                        "enum": [
-                          "Breakfast",
-                          "Lunch",
-                          "Dinner",
-                          "Snack"
-                        ]
+                        "enum": ["Breakfast", "Lunch", "Dinner", "Snack"]
                       },
                       "sortOrder": {
                         "type": "integer",
@@ -3885,9 +3688,7 @@
         "operationId": "plannedRecipesWeek",
         "summary": "Get planned recipes for the current week",
         "description": "The week runs Monday through Sunday in the server's timezone.",
-        "tags": [
-          "Planned Recipes"
-        ],
+        "tags": ["Planned Recipes"],
         "security": [
           {
             "ApiKeyAuth": []
@@ -3916,12 +3717,7 @@
                       },
                       "slot": {
                         "type": "string",
-                        "enum": [
-                          "Breakfast",
-                          "Lunch",
-                          "Dinner",
-                          "Snack"
-                        ]
+                        "enum": ["Breakfast", "Lunch", "Dinner", "Snack"]
                       },
                       "sortOrder": {
                         "type": "integer",
@@ -4015,9 +3811,7 @@
         "operationId": "plannedRecipesMonth",
         "summary": "Get planned recipes for the current month",
         "description": "The month is the calendar month in the server's timezone.",
-        "tags": [
-          "Planned Recipes"
-        ],
+        "tags": ["Planned Recipes"],
         "security": [
           {
             "ApiKeyAuth": []
@@ -4046,12 +3840,7 @@
                       },
                       "slot": {
                         "type": "string",
-                        "enum": [
-                          "Breakfast",
-                          "Lunch",
-                          "Dinner",
-                          "Snack"
-                        ]
+                        "enum": ["Breakfast", "Lunch", "Dinner", "Snack"]
                       },
                       "sortOrder": {
                         "type": "integer",
@@ -4144,9 +3933,7 @@
       "post": {
         "operationId": "plannedRecipeCreate",
         "summary": "Create a planned recipe",
-        "tags": [
-          "Planned Recipes"
-        ],
+        "tags": ["Planned Recipes"],
         "security": [
           {
             "ApiKeyAuth": []
@@ -4173,12 +3960,7 @@
                   },
                   "slot": {
                     "type": "string",
-                    "enum": [
-                      "Breakfast",
-                      "Lunch",
-                      "Dinner",
-                      "Snack"
-                    ]
+                    "enum": ["Breakfast", "Lunch", "Dinner", "Snack"]
                   },
                   "recipeId": {
                     "type": "string",
@@ -4186,11 +3968,7 @@
                     "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
                   }
                 },
-                "required": [
-                  "date",
-                  "slot",
-                  "recipeId"
-                ]
+                "required": ["date", "slot", "recipeId"]
               }
             }
           }
@@ -4209,9 +3987,7 @@
                       "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
                     }
                   },
-                  "required": [
-                    "id"
-                  ],
+                  "required": ["id"],
                   "additionalProperties": false
                 }
               }
@@ -4234,9 +4010,7 @@
       "delete": {
         "operationId": "plannedRecipeDelete",
         "summary": "Delete a planned recipe",
-        "tags": [
-          "Planned Recipes"
-        ],
+        "tags": ["Planned Recipes"],
         "security": [
           {
             "ApiKeyAuth": []
@@ -4282,10 +4056,7 @@
                       "type": "boolean"
                     }
                   },
-                  "required": [
-                    "success",
-                    "stale"
-                  ],
+                  "required": ["success", "stale"],
                   "additionalProperties": false
                 }
               }
@@ -4341,17 +4112,12 @@
                   "type": "string"
                 }
               },
-              "required": [
-                "message"
-              ],
+              "required": ["message"],
               "additionalProperties": false
             }
           }
         },
-        "required": [
-          "message",
-          "code"
-        ],
+        "required": ["message", "code"],
         "additionalProperties": false,
         "title": "The API is up but the database or parser service is unhealthy or unreachable error (503)",
         "description": "The error information",
@@ -4385,17 +4151,12 @@
                   "type": "string"
                 }
               },
-              "required": [
-                "message"
-              ],
+              "required": ["message"],
               "additionalProperties": false
             }
           }
         },
-        "required": [
-          "message",
-          "code"
-        ],
+        "required": ["message", "code"],
         "additionalProperties": false,
         "title": "Missing or invalid API credentials error (401)",
         "description": "The error information",
@@ -4429,17 +4190,12 @@
                   "type": "string"
                 }
               },
-              "required": [
-                "message"
-              ],
+              "required": ["message"],
               "additionalProperties": false
             }
           }
         },
-        "required": [
-          "message",
-          "code"
-        ],
+        "required": ["message", "code"],
         "additionalProperties": false,
         "title": "Recipe not found error (404)",
         "description": "The error information",
@@ -4473,17 +4229,12 @@
                   "type": "string"
                 }
               },
-              "required": [
-                "message"
-              ],
+              "required": ["message"],
               "additionalProperties": false
             }
           }
         },
-        "required": [
-          "message",
-          "code"
-        ],
+        "required": ["message", "code"],
         "additionalProperties": false,
         "title": "An import of this recipe is already in flight error (409)",
         "description": "The error information",
@@ -4517,17 +4268,12 @@
                   "type": "string"
                 }
               },
-              "required": [
-                "message"
-              ],
+              "required": ["message"],
               "additionalProperties": false
             }
           }
         },
-        "required": [
-          "message",
-          "code"
-        ],
+        "required": ["message", "code"],
         "additionalProperties": false,
         "title": "The URL is a video and AI or video parsing is not enabled error (412)",
         "description": "The error information",

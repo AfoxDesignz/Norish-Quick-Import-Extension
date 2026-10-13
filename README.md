@@ -26,7 +26,6 @@ Save recipes from any website into [Norish](https://github.com/norish-recipes/no
 
 - ⚠️ WIP: Firefox support
 - Add more functionality
-  
 - ✅ Done: Add a `Test Connection` feature
 
 > [!NOTE]
