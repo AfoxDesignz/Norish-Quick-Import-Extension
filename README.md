@@ -2,16 +2,11 @@
 
 ---
 
-<p align="center">
-  <img
-    alt="Logo"
-    src="https://raw.githubusercontent.com/AfoxDesignz/Norish-Quick-Import-Extension/main/docs/logo/logo.png"
-    width="180"
-  />
-</p>
-<h1 align="center">Norish Quick Import</h1>
+<h1>
+  <img src="https://raw.githubusercontent.com/AfoxDesignz/Norish-Quick-Import-Extension/main/docs/logo/logo.png" alt="logo" style="height: 1.2em; vertical-align: middle;"> Norish Quick Import
+</h1>
 
-![](https://raw.githubusercontent.com/AfoxDesignz/Norish-Quick-Import-Extension/main/docs/images/screenshot_home.png)
+![](https://github.com/user-attachments/assets/0dd3de08-924b-478b-947d-7f2c5089bf8e)
 
 Save recipes from any website into [Norish](https://github.com/norish-recipes/norish) in just two clicks while you browse.
 
