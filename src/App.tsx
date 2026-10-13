@@ -81,6 +81,8 @@ export default function App() {
     <Home
       config={config as Required<StoredConfig>}
       onNavigateSettings={() => setPage("settings")}
+      themeMode={themeMode}
+      onThemeModeChange={setThemeMode}
     />
   );
 }

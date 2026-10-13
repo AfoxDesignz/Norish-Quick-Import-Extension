@@ -24,9 +24,10 @@ Save recipes from any website into [Norish](https://github.com/norish-recipes/no
 
 **Planned**
 
-- Firefox support
-- Add a `Test Connection` feature
+- ⚠️ WIP: Firefox support
 - Add more functionality
+  
+- ✅ Done: Add a `Test Connection` feature
 
 > [!NOTE]
 > This extension is an independent project and is neither an official browser extension nor affiliated with the [Norish](https://github.com/norish-recipes/norish) project.

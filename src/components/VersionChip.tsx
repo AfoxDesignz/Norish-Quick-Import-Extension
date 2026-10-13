@@ -1,8 +1,5 @@
 import { Chip, Tooltip, Link } from "@heroui/react";
-import {
-  ArrowPathIcon,
-  ArrowTopRightOnSquareIcon,
-} from "@heroicons/react/16/solid";
+import { ArrowPathIcon } from "@heroicons/react/16/solid";
 import { useState } from "react";
 import { useVersionInfo } from "../hooks/useVersionInfo";
 
@@ -17,14 +14,10 @@ export default function VersionChip() {
         href={releaseUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-[10px] no-underline hover:underline"
-        onMouseEnter={() => setIsUpdateHovered(true)}
-        onMouseLeave={() => setIsUpdateHovered(false)}
+        className="text-[10px] font-medium text-muted hover:text-foreground transition-colors px-1.5 py-0.5 rounded-full bg-default-200/60 hover:bg-default-300/60 no-underline"
+        aria-label={`Extension version ${currentVersion}`}
       >
         v{currentVersion}
-        {isUpdateHovered && (
-          <ArrowTopRightOnSquareIcon className="ml-1 w-3 h-3" />
-        )}
       </Link>
     );
   }
@@ -44,8 +37,9 @@ export default function VersionChip() {
             color="success"
             variant={isUpdateHovered ? "primary" : "soft"}
             size="sm"
+            className="rounded-full h-5 text-[10px] px-2 font-medium"
           >
-            <ArrowPathIcon width={12} />
+            <ArrowPathIcon className="size-3" />
             <Chip.Label>Update</Chip.Label>
           </Chip>
         </Link>
@@ -53,7 +47,7 @@ export default function VersionChip() {
       <Tooltip.Content
         showArrow
         placement="bottom"
-        className="flex items-center gap-1.5 bg-content1 text-foreground border border-default-200 shadow-sm"
+        className="flex items-center gap-1.5 bg-surface text-foreground border border-border shadow-md rounded-xl px-2.5 py-1.5 text-xs"
       >
         <span className="relative flex size-2">
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-75" />

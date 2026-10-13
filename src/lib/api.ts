@@ -53,18 +53,48 @@ export async function createNorishClient(
   };
 }
 
+export interface ImportUrlResult {
+  /** Recipe UUID assigned by the server */
+  recipeId: string;
+  /**
+   * "queued": recipe was newly enqueued; poll /recipes/{id} until it appears.
+   * "exists": recipe already existed; no polling required.
+   */
+  status: "queued" | "exists";
+  recipeName?: string;
+  recipeImage?: string;
+}
+
+function extractRecipeImage(d: Record<string, unknown>): string | null {
+  if (typeof d.image === "string" && d.image.trim()) {
+    return d.image.trim();
+  }
+  if (Array.isArray(d.images) && d.images.length > 0) {
+    const first = d.images[0];
+    if (first && typeof first === "object") {
+      const imgObj = first as Record<string, unknown>;
+      if (typeof imgObj.image === "string" && imgObj.image.trim()) {
+        return imgObj.image.trim();
+      }
+    } else if (typeof first === "string" && first.trim()) {
+      return first.trim();
+    }
+  }
+  return null;
+}
+
 /**
- * Import a recipe from a URL
- * @param baseUrl API base URL (e.g., https://rezepte.secucore.de/api/v1)
+ * Import a recipe from a URL.
+ * @param baseUrl API base URL (e.g., https://norish.example.com/api/v1)
  * @param apiKey API authentication key
  * @param url Recipe URL to import
- * @returns Recipe UUID
+ * @returns ImportUrlResult with recipeId, status, and optional recipe metadata
  */
 export async function importRecipeFromUrl(
   baseUrl: string,
   apiKey: string,
   url: string,
-): Promise<string> {
+): Promise<ImportUrlResult> {
   const endpoint = `${baseUrl}/recipes/import/url`;
 
   const response = await fetch(endpoint, {
@@ -88,12 +118,41 @@ export async function importRecipeFromUrl(
     throw new Error(message);
   }
 
-  // Response is a UUID string
-  if (typeof data !== "string") {
-    throw new Error("Unexpected response format from import endpoint");
+  if (
+    data &&
+    typeof data === "object" &&
+    "recipeId" in data &&
+    typeof (data as Record<string, unknown>).recipeId === "string" &&
+    "status" in data &&
+    ((data as Record<string, unknown>).status === "queued" ||
+      (data as Record<string, unknown>).status === "exists")
+  ) {
+    const d = data as Record<string, unknown>;
+    const result: ImportUrlResult = {
+      recipeId: d.recipeId as string,
+      status: d.status as "queued" | "exists",
+    };
+
+    // extract metadata
+    if (
+      result.status === "exists" &&
+      d.recipe &&
+      typeof d.recipe === "object"
+    ) {
+      const recipe = d.recipe as Record<string, unknown>;
+      if (typeof recipe.name === "string") {
+        result.recipeName = recipe.name;
+      }
+      const img = extractRecipeImage(recipe);
+      if (img) {
+        result.recipeImage = img;
+      }
+    }
+
+    return result;
   }
 
-  return data;
+  throw new Error("Unexpected response format from import endpoint");
 }
 
 /**
@@ -107,7 +166,7 @@ export async function getRecipeStatus(
   baseUrl: string,
   apiKey: string,
   recipeId: string,
-): Promise<{ id: string; name: string } | null> {
+): Promise<{ id: string; name: string; image?: string | null } | null> {
   const endpoint = `${baseUrl}/recipes/${recipeId}`;
 
   const response = await fetch(endpoint, {
@@ -134,11 +193,13 @@ export async function getRecipeStatus(
     throw new Error(message);
   }
 
-  // Return minimal recipe info (id and name at least)
+  // Return minimal recipe info (id, name, and optional image)
   if (data && typeof data === "object" && "id" in data && "name" in data) {
+    const d = data as Record<string, unknown>;
     return {
-      id: (data as Record<string, unknown>).id as string,
-      name: (data as Record<string, unknown>).name as string,
+      id: d.id as string,
+      name: d.name as string,
+      image: extractRecipeImage(d),
     };
   }
 
@@ -167,7 +228,9 @@ function extractErrorMessageFromResponse(
     case 403:
       return "Access denied to this API";
     case 409:
-      return "This recipe already exists or is being imported";
+      return "An import of this recipe is already in progress. Please wait and try again.";
+    case 412:
+      return "Video import not supported: AI or video parsing is not enabled on this Norish instance.";
     case 422:
       return "Invalid request (invalid URL format?)";
     case 503:
@@ -193,4 +256,100 @@ export function extractErrorMessage(error: unknown): string {
   }
 
   return message;
+}
+
+export interface TestConnectionResult {
+  ok: boolean;
+  message: string;
+  version?: string;
+}
+
+export async function testConnection(
+  domain: string,
+  apiKey: string,
+): Promise<TestConnectionResult> {
+  const normDomain = normalizeToDomain(domain);
+  const trimmedKey = apiKey.trim();
+
+  if (!normDomain || !trimmedKey) {
+    return { ok: false, message: "Please provide both domain and API key." };
+  }
+
+  const [origin] = candidateOrigins(normDomain);
+
+  try {
+    // 1. Verify API Key against an authenticated endpoint requiring ApiKeyAuth
+    let authRes = await fetch(`${origin}/api/v1/groceries`, {
+      method: "GET",
+      headers: {
+        "x-api-key": trimmedKey,
+      },
+    });
+
+    // If /groceries returned 404 (e.g. customized instance), try /recipes/search
+    if (authRes.status === 404) {
+      authRes = await fetch(`${origin}/api/v1/recipes/search`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": trimmedKey,
+        },
+        body: JSON.stringify({ limit: 1 }),
+      });
+    }
+
+    if (authRes.status === 401) {
+      return {
+        ok: false,
+        message: "Server reached, but the API key is invalid.",
+      };
+    }
+
+    if (authRes.status === 403) {
+      return {
+        ok: false,
+        message:
+          "Server reached, but the API key has insufficient permissions.",
+      };
+    }
+
+    if (!authRes.ok) {
+      return {
+        ok: false,
+        message: `Server returned HTTP ${authRes.status}`,
+      };
+    }
+
+    // 2. Authentication succeeded! Retrieve optional version information from /health
+    let versionStr = "";
+    try {
+      const healthRes = await fetch(`${origin}/api/v1/health`);
+      if (healthRes.ok) {
+        const data = (await healthRes.json().catch(() => ({}))) as Record<
+          string,
+          unknown
+        >;
+        const versionObj = data?.versions as Record<string, string> | undefined;
+        if (versionObj?.root) {
+          versionStr = versionObj.root;
+        }
+      }
+    } catch {
+      // Optional version check failed, but auth was successful
+    }
+
+    return {
+      ok: true,
+      message: `Authentication successful!${versionStr ? ` (v${versionStr})` : ""}`,
+      version: versionStr || undefined,
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      message:
+        err instanceof Error
+          ? `Could not connect: ${err.message}`
+          : "Host unreachable.",
+    };
+  }
 }
