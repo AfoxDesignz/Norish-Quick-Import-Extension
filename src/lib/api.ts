@@ -53,18 +53,28 @@ export async function createNorishClient(
   };
 }
 
+export interface ImportUrlResult {
+  /** Recipe UUID assigned by the server */
+  recipeId: string;
+  /**
+   * "queued": recipe was newly enqueued; poll /recipes/{id} until it appears.
+   * "exists": recipe already existed; no polling required.
+   */
+  status: "queued" | "exists";
+}
+
 /**
- * Import a recipe from a URL
- * @param baseUrl API base URL (e.g., https://rezepte.secucore.de/api/v1)
+ * Import a recipe from a URL.
+ * @param baseUrl API base URL (e.g., https://norish.example.com/api/v1)
  * @param apiKey API authentication key
  * @param url Recipe URL to import
- * @returns Recipe UUID
+ * @returns ImportUrlResult with recipeId and whether it was queued or already existed
  */
 export async function importRecipeFromUrl(
   baseUrl: string,
   apiKey: string,
   url: string,
-): Promise<string> {
+): Promise<ImportUrlResult> {
   const endpoint = `${baseUrl}/recipes/import/url`;
 
   const response = await fetch(endpoint, {
@@ -88,12 +98,23 @@ export async function importRecipeFromUrl(
     throw new Error(message);
   }
 
-  // Response is a UUID string
-  if (typeof data !== "string") {
-    throw new Error("Unexpected response format from import endpoint");
+  if (
+    data &&
+    typeof data === "object" &&
+    "recipeId" in data &&
+    typeof (data as Record<string, unknown>).recipeId === "string" &&
+    "status" in data &&
+    ((data as Record<string, unknown>).status === "queued" ||
+      (data as Record<string, unknown>).status === "exists")
+  ) {
+    const d = data as Record<string, unknown>;
+    return {
+      recipeId: d.recipeId as string,
+      status: d.status as "queued" | "exists",
+    };
   }
 
-  return data;
+  throw new Error("Unexpected response format from import endpoint");
 }
 
 /**
@@ -167,7 +188,7 @@ function extractErrorMessageFromResponse(
     case 403:
       return "Access denied to this API";
     case 409:
-      return "This recipe already exists or is being imported";
+      return "An import of this recipe is already in progress. Please wait and try again.";
     case 422:
       return "Invalid request (invalid URL format?)";
     case 503:

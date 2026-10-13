@@ -216,14 +216,20 @@ export default function RecipeImportForm({ config }: RecipeImportFormProps) {
     try {
       const { baseUrl, apiKey } = await loadApiConfig();
 
-      const recipeId = await importRecipeFromUrl(baseUrl, apiKey, trimmed);
+      const result = await importRecipeFromUrl(baseUrl, apiKey, trimmed);
 
-      setStatusAndPersist({
-        type: "pending",
-        recipeId,
-        message: "Import queued. Waiting for parser status...",
-      });
-      requestBackgroundMonitor();
+      if (result.status === "exists") {
+        // recipe already existed
+        setStatusAndPersist({ type: "success", recipeId: result.recipeId });
+      } else {
+        // recipe is being parsed, poll until ready
+        setStatusAndPersist({
+          type: "pending",
+          recipeId: result.recipeId,
+          message: "Import queued. Waiting for parser status...",
+        });
+        requestBackgroundMonitor();
+      }
     } catch (error) {
       setStatusAndPersist({
         type: "error",
