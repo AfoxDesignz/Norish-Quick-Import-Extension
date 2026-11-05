@@ -179,6 +179,15 @@ async function watchImport(
         return importFailure(context, extractErrorMessage(error));
       }
 
+      if (error instanceof ApiError && error.status === 429) {
+        consecutiveErrors += 1;
+        if (consecutiveErrors >= MAX_CONSECUTIVE_STATUS_ERRORS) {
+          return importFailure(context, extractErrorMessage(error));
+        }
+        await delay(30_000);
+        continue;
+      }
+
       consecutiveErrors += 1;
       if (consecutiveErrors >= MAX_CONSECUTIVE_STATUS_ERRORS) {
         return importFailure(context, extractErrorMessage(error));

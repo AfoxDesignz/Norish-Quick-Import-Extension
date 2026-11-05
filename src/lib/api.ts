@@ -302,6 +302,8 @@ function extractErrorMessageFromResponse(
       return "Video import not supported: AI or video parsing is not enabled on this Norish instance.";
     case 422:
       return "Invalid request (invalid URL format?)";
+    case 429:
+      return "Too many requests. Please wait a moment and try again.";
     case 503:
       return "API service is temporarily unavailable";
     default:
