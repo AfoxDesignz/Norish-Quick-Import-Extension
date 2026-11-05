@@ -2,16 +2,25 @@ import { getChromeRuntimeError, setActionBadge } from "./lib/chrome";
 import type { StoredConfig } from "./types/storage";
 import { isImportInProgress, type StoredImport } from "./types/importStatus";
 import {
+  ApiError,
   createNorishClient,
   extractErrorMessage,
-  getRecipeStatus,
+  getImportStatus,
   normalizeToDomain,
 } from "./lib/api";
+import {
+  importFailure,
+  jobToStoredImport,
+  type ImportContext,
+} from "./lib/importJob";
 
 const IMPORT_STATUS_SYNC_ALARM = "norish-import-monitor";
 const IMPORT_STATUS_POLL_INTERVAL_MINUTES = 1;
-const POLL_INTERVAL_MS = 2000; // Poll every 2 seconds
-const POLL_TIMEOUT_MS = 3 * 60 * 1000; // 3 minute safety timeout for long running parser jobs
+const STATUS_WAIT_SECONDS = 25; // guards against a server that answers immediately instead of waiting.
+const MIN_STATUS_CYCLE_MS = 1000;
+const STATUS_RETRY_DELAY_MS = 2000;
+const MAX_CONSECUTIVE_STATUS_ERRORS = 5;
+const WATCH_TIMEOUT_MS = 5 * 60 * 1000; // safety timeout for very long parser jobs
 
 function syncBadgeWithImportStatus(lastImport: StoredImport | undefined): void {
   if (lastImport?.status === "success") {
@@ -118,55 +127,73 @@ async function syncImportMonitorAlarm(): Promise<void> {
   await chrome.alarms.clear(IMPORT_STATUS_SYNC_ALARM);
 }
 
-function isTerminalMonitorError(message: string): boolean {
-  const normalized = message.trim().toLowerCase();
-  if (!normalized) return false;
-
-  // Treat authentication/authorization issues as terminal.
-  return (
-    normalized.includes("invalid api key") ||
-    normalized.includes("you must be logged in")
-  );
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
- * Poll for recipe status until it appears or timeout occurs
- * @param baseUrl API base URL
- * @param apiKey API key
- * @param recipeId Recipe UUID to poll for
- * @returns true if recipe found (success), false if timeout/error
+ * Follows an import through the Norish import status API until it completes or fails, reporting progress (waiting / active + step) along the way.
+ * @returns the final state to persist, or null when another import replaced this one in the meantime
  */
-async function pollRecipeStatus(
+async function watchImport(
   baseUrl: string,
   apiKey: string,
-  recipeId: string,
-): Promise<{ id: string; name: string; image?: string | null } | null> {
-  const startTime = Date.now();
+  context: ImportContext,
+  onProgress: (progress: StoredImport) => Promise<void>,
+): Promise<StoredImport | null> {
+  const startedAt = Date.now();
+  let consecutiveErrors = 0;
+  let lastReported = "";
 
-  while (Date.now() - startTime < POLL_TIMEOUT_MS) {
+  while (Date.now() - startedAt < WATCH_TIMEOUT_MS) {
+    const cycleStartedAt = Date.now();
+
+    const current = await getLastImport();
+    if (current?.recipeId !== context.recipeId) return null;
+
     try {
-      const recipe = await getRecipeStatus(baseUrl, apiKey, recipeId);
+      const job = await getImportStatus(
+        baseUrl,
+        apiKey,
+        context.recipeId,
+        STATUS_WAIT_SECONDS,
+      );
+      consecutiveErrors = 0;
 
-      if (recipe) {
-        // Recipe found = success
-        return recipe;
+      const next = jobToStoredImport(job, context);
+      if (job.status === "completed" || job.status === "failed") {
+        return next;
       }
 
-      // 404 = still parsing, continue polling
-      await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
+      const progressKey = `${next.status}|${next.message}`;
+      if (progressKey !== lastReported) {
+        lastReported = progressKey;
+        await onProgress(next);
+      }
     } catch (error) {
-      const message = extractErrorMessage(error);
-      // Terminal errors should stop polling immediately
-      if (isTerminalMonitorError(message)) {
-        throw error;
+      // Authentication problems will not fix themselves.
+      if (
+        error instanceof ApiError &&
+        (error.status === 401 || error.status === 403)
+      ) {
+        return importFailure(context, extractErrorMessage(error));
       }
-      // Temporary errors, retry
-      await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
+
+      consecutiveErrors += 1;
+      if (consecutiveErrors >= MAX_CONSECUTIVE_STATUS_ERRORS) {
+        return importFailure(context, extractErrorMessage(error));
+      }
+      await delay(STATUS_RETRY_DELAY_MS);
+      continue;
+    }
+
+    const elapsed = Date.now() - cycleStartedAt;
+    if (elapsed < MIN_STATUS_CYCLE_MS) {
+      await delay(MIN_STATUS_CYCLE_MS - elapsed);
     }
   }
 
-  // Timeout reached without finding recipe
-  return null;
+  return importFailure(context, "Recipe import timed out. Please try again.");
 }
 
 let isSyncing = false;
@@ -182,6 +209,7 @@ async function syncImportStatusInBackground(): Promise<void> {
   }
 
   isSyncing = true;
+  let shouldResync = false;
   try {
     const recipeId = lastImport.recipeId;
     if (!recipeId) {
@@ -210,45 +238,28 @@ async function syncImportStatusInBackground(): Promise<void> {
       return;
     }
 
-    // Update status to "parsing" while checking
-    if (lastImport.status !== "parsing") {
-      await persistLastImport({
-        status: "parsing",
-        recipeId,
-        message: "Norish is processing your recipe.",
-      });
-    }
+    const context: ImportContext = {
+      recipeId,
+      source: lastImport.source ?? "server",
+      sourceUrl: lastImport.sourceUrl,
+    };
 
-    try {
-      const recipe = await pollRecipeStatus(baseUrl, apiKey, recipeId);
-
-      if (recipe) {
-        await persistLastImport({
-          status: "success",
-          recipeId,
-          recipeName: recipe.name,
-          recipeImage: recipe.image ?? undefined,
-        });
-      } else {
-        // Timeout without finding recipe
-        await persistLastImport({
-          status: "error",
-          recipeId,
-          message: "Recipe import timed out. Please try again.",
-        });
-      }
-    } catch (error) {
-      const message = extractErrorMessage(error);
-      await persistLastImport({
-        status: "error",
-        recipeId,
-        message,
-      });
+    const result = await watchImport(
+      baseUrl,
+      apiKey,
+      context,
+      persistLastImport,
+    );
+    if (result) {
+      await persistLastImport(result);
+    } else {
+      shouldResync = true;
     }
 
     await syncImportMonitorAlarm();
   } finally {
     isSyncing = false;
+    if (shouldResync) void syncImportStatusInBackground();
   }
 }
 

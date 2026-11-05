@@ -14,6 +14,19 @@ export function getChromeRuntimeError(): string | null {
   }
 }
 
+export function getActiveTab(): Promise<chrome.tabs.Tab | undefined> {
+  return new Promise((resolve) => {
+    if (!isExtensionContextValid()) {
+      resolve(undefined);
+      return;
+    }
+
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      resolve(getChromeRuntimeError() ? undefined : tabs?.[0]);
+    });
+  });
+}
+
 export type ActionBadgeState = "success" | "error" | "clear";
 
 function getThemeColor(

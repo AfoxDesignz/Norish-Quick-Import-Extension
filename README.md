@@ -92,13 +92,25 @@ pnpm run build
 
 ---
 
+<h3 id="import-modes">Import modes</h3>
+
+Some sites block Norish from loading the page (bot protection). The extension follows each import through the Norish import status API, so you see the current step and the real failure reason. When Norish fails to import a page, the extension can read the recipe from the page you have open in your browser and send it to Norish instead. Choose the behavior under **Settings → Import Mode**:
+
+- **Automatic** (default): Norish imports the link; if that fails and the link is the open tab, the recipe is read from the tab and sent to Norish.
+- **Norish only**: Norish imports the link. After a failure, a **Retry with browser data** button is shown.
+- **Browser first**: the open tab is read first. Links that are not the open tab are imported by Norish.
+
+The browser import sends the page's structured recipe data (JSON-LD) to Norish when available. Otherwise it sends the visible page text, which Norish parses with AI, so this needs AI to be enabled on your Norish instance.
+
+---
+
 <h3><picture><source media="(prefers-color-scheme: dark)" srcset="docs/icons/privacy-white.svg"><img alt="" src="docs/icons/privacy-black.svg" width="16" height="16"></picture> Privacy</h3>
 
 Data handling:
 
 - Stored locally (Chrome sync storage): your Norish domain and API key.
 - Stored locally (Chrome local storage): the latest import status shown in the popup.
-- Sent to your configured Norish instance during import: recipe URL and API key.
+- Sent to your configured Norish instance during import: recipe URL and API key. If the browser import is used, the recipe data or text of the open page is sent to your Norish instance as well.
 - **Not** sent: analytics, tracking data, or data to third-party services.
 
 <h3><picture><source media="(prefers-color-scheme: dark)" srcset="docs/icons/permissions-white.svg"><img alt="" src="docs/icons/permissions-black.svg" width="16" height="16"></picture> Permissions</h3>
@@ -107,6 +119,7 @@ The extension currently requests:
 
 - `storage`: stores your Norish domain/API key and the latest import status.
 - `tabs`: reads the active tab URL so the recipe URL field can be prefilled.
+- `activeTab` + `scripting`: only used for the browser import (see [Import modes](#import-modes)). When you use the popup on a page, the extension reads that one tab's recipe data (JSON-LD or visible text). It never reads pages in the background.
 - `optional_host_permissions` (`http://*/*`, `https://*/*`): when you save settings, the extension requests access only for your configured Norish domain.
 
 ---

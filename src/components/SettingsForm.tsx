@@ -8,6 +8,8 @@ import {
   Form,
   InputGroup,
   Label,
+  ListBox,
+  Select,
   TextField,
 } from "@heroui/react";
 import {
@@ -18,6 +20,36 @@ import {
 } from "@heroicons/react/16/solid";
 import { useSettings } from "../hooks/useSettings";
 import { testConnection, type TestConnectionResult } from "../lib/api";
+import {
+  DEFAULT_IMPORT_MODE,
+  isImportMode,
+  type ImportMode,
+} from "../types/storage";
+
+const IMPORT_MODE_OPTIONS: {
+  id: ImportMode;
+  label: string;
+  description: string;
+}[] = [
+  {
+    id: "auto",
+    label: "Automatic",
+    description:
+      "Norish imports the link. If that fails, the recipe is read from the open tab and sent to Norish.",
+  },
+  {
+    id: "server",
+    label: "Norish only",
+    description:
+      "Norish imports the link. After a failure you can still retry with browser data manually.",
+  },
+  {
+    id: "local",
+    label: "Browser first",
+    description:
+      "The recipe is read from the open tab and sent to Norish. Links that are not the open tab are imported by Norish.",
+  },
+];
 
 interface SettingsFormProps {
   onSaved: () => void;
@@ -32,6 +64,9 @@ export default function SettingsForm({ onSaved }: SettingsFormProps) {
   const [testResult, setTestResult] = useState<TestConnectionResult | null>(
     null,
   );
+  const [importMode, setImportMode] = useState<ImportMode>(
+    settings.importMode ?? DEFAULT_IMPORT_MODE,
+  );
   const [isApiKeyVisible, setIsApiKeyVisible] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [didHydrateFromSettings, setDidHydrateFromSettings] = useState(false);
@@ -43,8 +78,14 @@ export default function SettingsForm({ onSaved }: SettingsFormProps) {
 
     setDomain(settings.instanceDomain ?? "");
     setApiKey(settings.apiKey ?? "");
+    setImportMode(settings.importMode ?? DEFAULT_IMPORT_MODE);
     setDidHydrateFromSettings(true);
-  }, [didHydrateFromSettings, settings.apiKey, settings.instanceDomain]);
+  }, [
+    didHydrateFromSettings,
+    settings.apiKey,
+    settings.importMode,
+    settings.instanceDomain,
+  ]);
 
   const handleTestConnection = async () => {
     setError(null);
@@ -88,7 +129,7 @@ export default function SettingsForm({ onSaved }: SettingsFormProps) {
     setIsSaving(true);
     try {
       const domainToSave = trimmedDomain.replace(/^https?:\/\//i, "");
-      await saveSettings(domainToSave, trimmedKey);
+      await saveSettings(domainToSave, trimmedKey, importMode);
       onSaved();
     } catch (err) {
       const message =
@@ -119,7 +160,10 @@ export default function SettingsForm({ onSaved }: SettingsFormProps) {
           <Label className="text-xs font-semibold text-foreground">
             Instance Domain
           </Label>
-          <InputGroup fullWidth className="rounded-xl">
+          <InputGroup
+            fullWidth
+            className="rounded-xl border border-border bg-surface"
+          >
             <InputGroup.Prefix className="text-muted text-xs font-medium">
               https://
             </InputGroup.Prefix>
@@ -149,7 +193,10 @@ export default function SettingsForm({ onSaved }: SettingsFormProps) {
           <Label className="text-xs font-semibold text-foreground">
             API Key
           </Label>
-          <InputGroup fullWidth className="rounded-xl">
+          <InputGroup
+            fullWidth
+            className="rounded-xl border border-border bg-surface"
+          >
             <InputGroup.Input
               className="text-xs font-mono"
               placeholder="Paste your Norish API key"
@@ -157,6 +204,7 @@ export default function SettingsForm({ onSaved }: SettingsFormProps) {
             />
             <InputGroup.Suffix className="pr-1">
               <Button
+                type="button"
                 isIconOnly
                 size="sm"
                 variant="ghost"
@@ -177,6 +225,46 @@ export default function SettingsForm({ onSaved }: SettingsFormProps) {
           </Description>
           <FieldError className="text-xs text-danger" />
         </TextField>
+
+        {/* Import mode */}
+        <Select
+          fullWidth
+          value={importMode}
+          onChange={(value) => {
+            if (isImportMode(value)) setImportMode(value);
+          }}
+          name="importMode"
+          className="gap-1.5"
+        >
+          <Label className="text-xs font-semibold text-foreground">
+            Import Mode
+          </Label>
+          <Select.Trigger className="rounded-xl text-xs bg-surface border border-border text-foreground hover:bg-default-100/60 transition-colors">
+            <Select.Value className="text-xs text-foreground" />
+            <Select.Indicator />
+          </Select.Trigger>
+          <Description className="text-[11px] text-muted">
+            {
+              IMPORT_MODE_OPTIONS.find((option) => option.id === importMode)
+                ?.description
+            }
+          </Description>
+          <Select.Popover className="rounded-2xl border border-border bg-overlay text-foreground text-xs shadow-lg p-1 z-50">
+            <ListBox className="p-0 gap-0.5 outline-none">
+              {IMPORT_MODE_OPTIONS.map((option) => (
+                <ListBox.Item
+                  key={option.id}
+                  id={option.id}
+                  textValue={option.label}
+                  className="rounded-xl px-2.5 py-1.5 text-xs text-foreground cursor-pointer hover:bg-default-100/80 focus:bg-default-100/80 data-[selected=true]:bg-default-200/60 transition-colors"
+                >
+                  {option.label}
+                  <ListBox.ItemIndicator className="text-primary" />
+                </ListBox.Item>
+              ))}
+            </ListBox>
+          </Select.Popover>
+        </Select>
 
         {/* Test Result Feedback */}
         {testResult && (

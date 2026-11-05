@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
   "name": "Norish Quick Import",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "description": "Quickly import recipes to a Norish instance",
-  "permissions": ["storage", "tabs", "alarms"],
+  "permissions": ["storage", "tabs", "alarms", "scripting", "activeTab"],
   "optional_host_permissions": ["http://*/*", "https://*/*"],
   "icons": {
     "16": "icons/icon16.png",

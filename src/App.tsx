@@ -7,6 +7,8 @@ import { useTheme } from "./hooks/useTheme";
 
 type Page = "loading" | "settings" | "home";
 
+const CONFIG_KEYS = ["instanceDomain", "apiKey", "importMode"];
+
 export default function App() {
   const { themeMode, setThemeMode } = useTheme();
   const [page, setPage] = useState<Page>(() =>
@@ -24,7 +26,7 @@ export default function App() {
   useEffect(() => {
     if (!isExtensionContextValid()) return;
 
-    chrome.storage.sync.get(["instanceDomain", "apiKey"], (res) => {
+    chrome.storage.sync.get(CONFIG_KEYS, (res) => {
       if (getChromeRuntimeError()) {
         setPage("settings");
         return;
@@ -47,7 +49,7 @@ export default function App() {
       return;
     }
 
-    chrome.storage.sync.get(["instanceDomain", "apiKey"], (res) => {
+    chrome.storage.sync.get(CONFIG_KEYS, (res) => {
       if (getChromeRuntimeError()) {
         setPage("settings");
         return;

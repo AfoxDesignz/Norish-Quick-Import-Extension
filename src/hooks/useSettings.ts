@@ -1,11 +1,20 @@
 import { useState, useEffect } from "react";
-import type { StoredConfig } from "../types/storage";
+import {
+  DEFAULT_IMPORT_MODE,
+  isImportMode,
+  type ImportMode,
+  type StoredConfig,
+} from "../types/storage";
 import { getChromeRuntimeError, isExtensionContextValid } from "../lib/chrome";
 
 interface UseSettingsReturn {
   settings: StoredConfig;
   isLoading: boolean;
-  saveSettings: (instanceDomain: string, apiKey: string) => Promise<void>;
+  saveSettings: (
+    instanceDomain: string,
+    apiKey: string,
+    importMode: ImportMode,
+  ) => Promise<void>;
 }
 
 function normalizeToDomain(raw: string): string {
@@ -73,20 +82,30 @@ export function useSettings(): UseSettingsReturn {
   useEffect(() => {
     if (!isExtensionContextValid()) return;
 
-    chrome.storage.sync.get(["instanceDomain", "apiKey"], (res) => {
-      if (getChromeRuntimeError()) {
-        setIsLoading(false);
-        return;
-      }
+    chrome.storage.sync.get(
+      ["instanceDomain", "apiKey", "importMode"],
+      (res) => {
+        if (getChromeRuntimeError()) {
+          setIsLoading(false);
+          return;
+        }
 
-      setSettings(res as StoredConfig);
-      setIsLoading(false);
-    });
+        const stored = res as StoredConfig;
+        setSettings({
+          ...stored,
+          importMode: isImportMode(stored.importMode)
+            ? stored.importMode
+            : DEFAULT_IMPORT_MODE,
+        });
+        setIsLoading(false);
+      },
+    );
   }, []);
 
   const saveSettings = async (
     instanceDomain: string,
     apiKey: string,
+    importMode: ImportMode,
   ): Promise<void> => {
     if (!isExtensionContextValid()) {
       throw new Error(
@@ -97,16 +116,19 @@ export function useSettings(): UseSettingsReturn {
     const normalized = normalizeToDomain(instanceDomain);
     await requestHostPermission(normalized);
     return new Promise((resolve, reject) => {
-      chrome.storage.sync.set({ instanceDomain: normalized, apiKey }, () => {
-        const runtimeError = getChromeRuntimeError();
-        if (runtimeError) {
-          reject(new Error(runtimeError));
-          return;
-        }
+      chrome.storage.sync.set(
+        { instanceDomain: normalized, apiKey, importMode },
+        () => {
+          const runtimeError = getChromeRuntimeError();
+          if (runtimeError) {
+            reject(new Error(runtimeError));
+            return;
+          }
 
-        setSettings({ instanceDomain: normalized, apiKey });
-        resolve();
-      });
+          setSettings({ instanceDomain: normalized, apiKey, importMode });
+          resolve();
+        },
+      );
     });
   };
 

@@ -53,16 +53,48 @@ export async function createNorishClient(
   };
 }
 
+/** An error response from the Norish API, keeping the HTTP status. */
+export class ApiError extends Error {
+  status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+  }
+}
+
 export interface ImportUrlResult {
   /** Recipe UUID assigned by the server */
   recipeId: string;
   /**
-   * "queued": recipe was newly enqueued; poll /recipes/{id} until it appears.
-   * "exists": recipe already existed; no polling required.
+   * "queued": recipe was newly enqueued; follow it via the import status API.
+   * "exists": recipe already existed; no status tracking required.
    */
   status: "queued" | "exists";
   recipeName?: string;
   recipeImage?: string;
+}
+
+export type ImportJobStatus = "waiting" | "active" | "completed" | "failed";
+
+const IMPORT_JOB_STATUSES: readonly string[] = [
+  "waiting",
+  "active",
+  "completed",
+  "failed",
+];
+
+/** State of a queued import as reported by GET /recipes/import/status/{id}. */
+export interface ImportJob {
+  recipeId: string;
+  status: ImportJobStatus;
+  /** Step currently being executed (e.g. dedupe-check, parsing, saving). */
+  step: string | null;
+  /** Failure reason reported by Norish when status is "failed". */
+  error: string | null;
+  /** Present once the import has completed. */
+  recipe: { name: string; image: string | null } | null;
 }
 
 function extractRecipeImage(d: Record<string, unknown>): string | null {
@@ -83,6 +115,44 @@ function extractRecipeImage(d: Record<string, unknown>): string | null {
   return null;
 }
 
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object"
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+async function requestJson(
+  url: string,
+  apiKey: string,
+  init: { method: "GET" | "POST"; body?: unknown; signal?: AbortSignal },
+): Promise<unknown> {
+  const headers: Record<string, string> = { "x-api-key": apiKey };
+  if (init.body !== undefined) headers["Content-Type"] = "application/json";
+
+  const response = await fetch(url, {
+    method: init.method,
+    headers,
+    body: init.body !== undefined ? JSON.stringify(init.body) : undefined,
+    signal: init.signal,
+  });
+
+  let data: unknown = null;
+  try {
+    data = await response.json();
+  } catch {
+    data = null;
+  }
+
+  if (!response.ok) {
+    throw new ApiError(
+      extractErrorMessageFromResponse(data, response.status),
+      response.status,
+    );
+  }
+
+  return data;
+}
+
 /**
  * Import a recipe from a URL.
  * @param baseUrl API base URL (e.g., https://norish.example.com/api/v1)
@@ -95,51 +165,25 @@ export async function importRecipeFromUrl(
   apiKey: string,
   url: string,
 ): Promise<ImportUrlResult> {
-  const endpoint = `${baseUrl}/recipes/import/url`;
-
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": apiKey,
-    },
-    body: JSON.stringify({ url, forceAI: false }),
-  });
-
-  let data: unknown = null;
-  try {
-    data = await response.json();
-  } catch {
-    data = null;
-  }
-
-  if (!response.ok) {
-    const message = extractErrorMessageFromResponse(data, response.status);
-    throw new Error(message);
-  }
+  const data = asRecord(
+    await requestJson(`${baseUrl}/recipes/import/url`, apiKey, {
+      method: "POST",
+      body: { url, forceAI: false },
+    }),
+  );
 
   if (
     data &&
-    typeof data === "object" &&
-    "recipeId" in data &&
-    typeof (data as Record<string, unknown>).recipeId === "string" &&
-    "status" in data &&
-    ((data as Record<string, unknown>).status === "queued" ||
-      (data as Record<string, unknown>).status === "exists")
+    typeof data.recipeId === "string" &&
+    (data.status === "queued" || data.status === "exists")
   ) {
-    const d = data as Record<string, unknown>;
     const result: ImportUrlResult = {
-      recipeId: d.recipeId as string,
-      status: d.status as "queued" | "exists",
+      recipeId: data.recipeId,
+      status: data.status,
     };
 
-    // extract metadata
-    if (
-      result.status === "exists" &&
-      d.recipe &&
-      typeof d.recipe === "object"
-    ) {
-      const recipe = d.recipe as Record<string, unknown>;
+    const recipe = asRecord(data.recipe);
+    if (result.status === "exists" && recipe) {
       if (typeof recipe.name === "string") {
         result.recipeName = recipe.name;
       }
@@ -156,54 +200,77 @@ export async function importRecipeFromUrl(
 }
 
 /**
- * Get recipe status by ID. Returns null if recipe not found (still being parsed).
- * @param baseUrl API base URL
- * @param apiKey API authentication key
- * @param recipeId Recipe UUID
- * @returns Recipe object if found, null if 404 (still parsing/pending)
+ * Import a recipe from text that was read from the page in the browser. Supports JSON-LD recipe objects as well as plain text (parsed by Norish AI).
+ * @param useAi Force Norish to parse the text with AI (needed for plain text)
+ * @returns The IDs of the recipes Norish queued
  */
-export async function getRecipeStatus(
+export async function importRecipeFromText(
+  baseUrl: string,
+  apiKey: string,
+  text: string,
+  useAi: boolean,
+): Promise<string[]> {
+  const data = asRecord(
+    await requestJson(`${baseUrl}/recipes/import/paste`, apiKey, {
+      method: "POST",
+      body: { text, forceAI: useAi },
+    }),
+  );
+
+  const ids = data?.recipeIds;
+  if (
+    Array.isArray(ids) &&
+    ids.length > 0 &&
+    ids.every((id) => typeof id === "string")
+  ) {
+    return ids as string[];
+  }
+
+  throw new Error("Unexpected response format from import endpoint");
+}
+
+/**
+ * Get the status of a queued import. The server holds the request open for up to `waitSeconds` (max 60) or until the job reaches a final state.
+ */
+export async function getImportStatus(
   baseUrl: string,
   apiKey: string,
   recipeId: string,
-): Promise<{ id: string; name: string; image?: string | null } | null> {
-  const endpoint = `${baseUrl}/recipes/${recipeId}`;
+  waitSeconds = 0,
+): Promise<ImportJob> {
+  const wait = Math.min(Math.max(Math.floor(waitSeconds), 0), 60);
+  const data = asRecord(
+    await requestJson(
+      `${baseUrl}/recipes/import/status/${encodeURIComponent(recipeId)}?wait=${wait}`,
+      apiKey,
+      {
+        method: "GET",
+        // Allow the server-side wait plus some network headroom.
+        signal: AbortSignal.timeout((wait + 15) * 1000),
+      },
+    ),
+  );
 
-  const response = await fetch(endpoint, {
-    method: "GET",
-    headers: {
-      "x-api-key": apiKey,
-    },
-  });
-
-  if (response.status === 404) {
-    // Recipe not found = still being parsed/processed
-    return null;
-  }
-
-  let data: unknown = null;
-  try {
-    data = await response.json();
-  } catch {
-    data = null;
-  }
-
-  if (!response.ok) {
-    const message = extractErrorMessageFromResponse(data, response.status);
-    throw new Error(message);
-  }
-
-  // Return minimal recipe info (id, name, and optional image)
-  if (data && typeof data === "object" && "id" in data && "name" in data) {
-    const d = data as Record<string, unknown>;
+  if (
+    data &&
+    typeof data.recipeId === "string" &&
+    typeof data.status === "string" &&
+    IMPORT_JOB_STATUSES.includes(data.status)
+  ) {
+    const recipe = asRecord(data.recipe);
     return {
-      id: d.id as string,
-      name: d.name as string,
-      image: extractRecipeImage(d),
+      recipeId: data.recipeId,
+      status: data.status as ImportJobStatus,
+      step: typeof data.step === "string" ? data.step : null,
+      error: typeof data.error === "string" ? data.error : null,
+      recipe:
+        recipe && typeof recipe.name === "string"
+          ? { name: recipe.name, image: extractRecipeImage(recipe) }
+          : null,
     };
   }
 
-  throw new Error("Unexpected response format from recipe endpoint");
+  throw new Error("Unexpected response format from import status endpoint");
 }
 
 function extractErrorMessageFromResponse(
@@ -227,6 +294,8 @@ function extractErrorMessageFromResponse(
       return "Invalid API key (please check your API key in settings)";
     case 403:
       return "Access denied to this API";
+    case 404:
+      return "Import not found on this Norish instance";
     case 409:
       return "An import of this recipe is already in progress. Please wait and try again.";
     case 412:
@@ -261,7 +330,6 @@ export function extractErrorMessage(error: unknown): string {
 export interface TestConnectionResult {
   ok: boolean;
   message: string;
-  version?: string;
 }
 
 export async function testConnection(
@@ -278,7 +346,7 @@ export async function testConnection(
   const [origin] = candidateOrigins(normDomain);
 
   try {
-    // 1. Verify API Key against an authenticated endpoint requiring ApiKeyAuth
+    // Verify the API key against an authenticated endpoint requiring ApiKeyAuth
     let authRes = await fetch(`${origin}/api/v1/groceries`, {
       method: "GET",
       headers: {
@@ -320,29 +388,7 @@ export async function testConnection(
       };
     }
 
-    // 2. Authentication succeeded! Retrieve optional version information from /health
-    let versionStr = "";
-    try {
-      const healthRes = await fetch(`${origin}/api/v1/health`);
-      if (healthRes.ok) {
-        const data = (await healthRes.json().catch(() => ({}))) as Record<
-          string,
-          unknown
-        >;
-        const versionObj = data?.versions as Record<string, string> | undefined;
-        if (versionObj?.root) {
-          versionStr = versionObj.root;
-        }
-      }
-    } catch {
-      // Optional version check failed, but auth was successful
-    }
-
-    return {
-      ok: true,
-      message: `Authentication successful!${versionStr ? ` (v${versionStr})` : ""}`,
-      version: versionStr || undefined,
-    };
+    return { ok: true, message: "Authentication successful!" };
   } catch (err) {
     return {
       ok: false,

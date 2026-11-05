@@ -127,7 +127,8 @@
   --content4-foreground: #181918;
 
   --focus: #336640;
-  --overlay: #000000;
+  --overlay: #ffffff;
+  --overlay-foreground: #181918;
 }
 
 .dark,
@@ -259,7 +260,8 @@
   --content4-foreground: #fbfcfc;
 
   --focus: #488b5a;
-  --overlay: #ffffff;
+  --overlay: #201e1a;
+  --overlay-foreground: #fbfcfc;
 }
 
 @theme inline {
@@ -394,4 +396,5 @@
 
   --color-focus: var(--focus);
   --color-overlay: var(--overlay);
+  --color-overlay-foreground: var(--overlay-foreground);
 }
