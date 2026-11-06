@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getChromeRuntimeError, isExtensionContextValid } from "../lib/chrome";
+import { getActiveTab, isExtensionContextValid } from "../lib/browser";
 
 export function useCurrentTabUrl(): string {
   const [url, setUrl] = useState("");
@@ -7,11 +7,8 @@ export function useCurrentTabUrl(): string {
   useEffect(() => {
     if (!isExtensionContextValid()) return;
 
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      if (getChromeRuntimeError()) return;
-
-      const tabUrl = tabs?.[0]?.url;
-      if (tabUrl) setUrl(tabUrl);
+    void getActiveTab().then((tab) => {
+      if (tab?.url) setUrl(tab.url);
     });
   }, []);
 

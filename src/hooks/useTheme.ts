@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
-import { getChromeRuntimeError, isExtensionContextValid } from "../lib/chrome";
+import type { Storage } from "webextension-polyfill";
+import {
+  browser,
+  isExtensionContextValid,
+  onStorageChanged,
+} from "../lib/browser";
 
 const THEME_STORAGE_KEY = "themeMode";
 
@@ -35,23 +40,24 @@ export function useTheme(): UseThemeReturn {
   useEffect(() => {
     if (!isExtensionContextValid()) return;
 
-    chrome.storage.local.get([THEME_STORAGE_KEY], (res) => {
-      if (getChromeRuntimeError()) {
-        setIsLoading(false);
-        return;
-      }
-
-      const storedTheme = (res as { themeMode?: unknown }).themeMode;
-      if (isThemeMode(storedTheme)) {
-        setThemeModeState(storedTheme);
-      } else {
+    void (async () => {
+      try {
+        const res = await browser.storage.local.get([THEME_STORAGE_KEY]);
+        const storedTheme = (res as { themeMode?: unknown }).themeMode;
+        if (isThemeMode(storedTheme)) {
+          setThemeModeState(storedTheme);
+        } else {
+          setThemeModeState(getSystemPreferredTheme());
+        }
+      } catch {
         setThemeModeState(getSystemPreferredTheme());
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
-    });
+    })();
 
     const listener = (
-      changes: { [key: string]: chrome.storage.StorageChange },
+      changes: Record<string, Storage.StorageChange>,
       areaName: string,
     ) => {
       if (areaName !== "local" || !changes.themeMode) return;
@@ -66,8 +72,7 @@ export function useTheme(): UseThemeReturn {
       }
     };
 
-    chrome.storage.onChanged.addListener(listener);
-    return () => chrome.storage.onChanged.removeListener(listener);
+    return onStorageChanged(listener);
   }, []);
 
   const setThemeMode = useCallback(async (nextMode: ThemeMode) => {
@@ -77,16 +82,7 @@ export function useTheme(): UseThemeReturn {
       return;
     }
 
-    await new Promise<void>((resolve, reject) => {
-      chrome.storage.local.set({ themeMode: nextMode }, () => {
-        const runtimeError = getChromeRuntimeError();
-        if (runtimeError) {
-          reject(new Error(runtimeError));
-          return;
-        }
-        resolve();
-      });
-    });
+    await browser.storage.local.set({ themeMode: nextMode });
   }, []);
 
   return { themeMode, isLoading, setThemeMode };

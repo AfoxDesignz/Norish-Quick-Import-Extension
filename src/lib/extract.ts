@@ -7,6 +7,8 @@
  *  2. The visible page text (Norish has to parse it with AI)
  */
 
+import { browser } from "./browser";
+
 /** Norish accepts at most 100,000 characters per pasted recipe. */
 const MAX_TEXT_LENGTH = 100_000;
 /** Pages with less text than this are almost certainly not a recipe. */
@@ -146,11 +148,11 @@ export async function extractRecipeFromTab(
 ): Promise<PageExtraction> {
   let snapshot: PageSnapshot | undefined;
   try {
-    const results = await chrome.scripting.executeScript({
+    const results = await browser.scripting.executeScript({
       target: { tabId },
       func: collectPageSnapshot,
     });
-    snapshot = results[0]?.result;
+    snapshot = results[0]?.result as PageSnapshot | undefined;
   } catch {
     throw new Error(
       "The browser does not allow reading this page. Open the recipe page in a normal tab and try again.",

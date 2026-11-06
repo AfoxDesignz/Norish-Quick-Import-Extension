@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import Settings from "./pages/Settings";
 import Home from "./pages/Home";
 import type { StoredConfig } from "./types/storage";
-import { getChromeRuntimeError, isExtensionContextValid } from "./lib/chrome";
+import { browser, isExtensionContextValid } from "./lib/browser";
 import { useTheme } from "./hooks/useTheme";
 
 type Page = "loading" | "settings" | "home";
@@ -26,20 +26,23 @@ export default function App() {
   useEffect(() => {
     if (!isExtensionContextValid()) return;
 
-    chrome.storage.sync.get(CONFIG_KEYS, (res) => {
-      if (getChromeRuntimeError()) {
+    const loadConfig = async () => {
+      try {
+        const res = (await browser.storage.sync.get(
+          CONFIG_KEYS,
+        )) as StoredConfig;
+        setConfig(res);
+        if (res.instanceDomain && res.apiKey) {
+          setPage("home");
+        } else {
+          setPage("settings");
+        }
+      } catch {
         setPage("settings");
-        return;
       }
+    };
 
-      const stored = res as StoredConfig;
-      setConfig(stored);
-      if (stored.instanceDomain && stored.apiKey) {
-        setPage("home");
-      } else {
-        setPage("settings");
-      }
-    });
+    void loadConfig();
   }, []);
 
   const handleSettingsSaved = () => {
@@ -49,15 +52,17 @@ export default function App() {
       return;
     }
 
-    chrome.storage.sync.get(CONFIG_KEYS, (res) => {
-      if (getChromeRuntimeError()) {
+    void (async () => {
+      try {
+        const res = (await browser.storage.sync.get(
+          CONFIG_KEYS,
+        )) as StoredConfig;
+        setConfig(res);
+        setPage("home");
+      } catch {
         setPage("settings");
-        return;
       }
-
-      setConfig(res as StoredConfig);
-      setPage("home");
-    });
+    })();
   };
 
   if (page === "loading") {

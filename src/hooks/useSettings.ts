@@ -5,7 +5,11 @@ import {
   type ImportMode,
   type StoredConfig,
 } from "../types/storage";
-import { getChromeRuntimeError, isExtensionContextValid } from "../lib/chrome";
+import {
+  browser,
+  isExtensionContextValid,
+  requestHostPermission,
+} from "../lib/browser";
 
 interface UseSettingsReturn {
   settings: StoredConfig;
@@ -38,43 +42,6 @@ function hostPermissionOrigins(domain: string): string[] {
   return [`https://${host}/*`, `http://${host}/*`];
 }
 
-async function requestHostPermission(domain: string): Promise<void> {
-  const origins = hostPermissionOrigins(domain);
-  if (!origins.length) return;
-
-  const contains = await new Promise<boolean>((resolve, reject) => {
-    chrome.permissions.contains({ origins }, (granted) => {
-      const runtimeError = getChromeRuntimeError();
-      if (runtimeError) {
-        reject(new Error(runtimeError));
-        return;
-      }
-
-      resolve(granted);
-    });
-  });
-
-  if (contains) return;
-
-  const granted = await new Promise<boolean>((resolve, reject) => {
-    chrome.permissions.request({ origins }, (result) => {
-      const runtimeError = getChromeRuntimeError();
-      if (runtimeError) {
-        reject(new Error(runtimeError));
-        return;
-      }
-
-      resolve(result);
-    });
-  });
-
-  if (!granted) {
-    throw new Error(
-      "Host permission was denied. Please allow access for your Norish domain.",
-    );
-  }
-}
-
 export function useSettings(): UseSettingsReturn {
   const [settings, setSettings] = useState<StoredConfig>({});
   const [isLoading, setIsLoading] = useState(() => isExtensionContextValid());
@@ -82,24 +49,26 @@ export function useSettings(): UseSettingsReturn {
   useEffect(() => {
     if (!isExtensionContextValid()) return;
 
-    chrome.storage.sync.get(
-      ["instanceDomain", "apiKey", "importMode"],
-      (res) => {
-        if (getChromeRuntimeError()) {
-          setIsLoading(false);
-          return;
-        }
+    void (async () => {
+      try {
+        const res = (await browser.storage.sync.get([
+          "instanceDomain",
+          "apiKey",
+          "importMode",
+        ])) as StoredConfig;
 
-        const stored = res as StoredConfig;
         setSettings({
-          ...stored,
-          importMode: isImportMode(stored.importMode)
-            ? stored.importMode
+          ...res,
+          importMode: isImportMode(res.importMode)
+            ? res.importMode
             : DEFAULT_IMPORT_MODE,
         });
+      } catch {
+        return;
+      } finally {
         setIsLoading(false);
-      },
-    );
+      }
+    })();
   }, []);
 
   const saveSettings = async (
@@ -114,22 +83,13 @@ export function useSettings(): UseSettingsReturn {
     }
 
     const normalized = normalizeToDomain(instanceDomain);
-    await requestHostPermission(normalized);
-    return new Promise((resolve, reject) => {
-      chrome.storage.sync.set(
-        { instanceDomain: normalized, apiKey, importMode },
-        () => {
-          const runtimeError = getChromeRuntimeError();
-          if (runtimeError) {
-            reject(new Error(runtimeError));
-            return;
-          }
-
-          setSettings({ instanceDomain: normalized, apiKey, importMode });
-          resolve();
-        },
-      );
+    await requestHostPermission(hostPermissionOrigins(normalized));
+    await browser.storage.sync.set({
+      instanceDomain: normalized,
+      apiKey,
+      importMode,
     });
+    setSettings({ instanceDomain: normalized, apiKey, importMode });
   };
 
   return { settings, isLoading, saveSettings };

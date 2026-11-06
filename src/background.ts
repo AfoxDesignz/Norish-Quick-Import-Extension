@@ -1,4 +1,4 @@
-import { getChromeRuntimeError, setActionBadge } from "./lib/chrome";
+import { browser, onStorageChanged, setActionBadge } from "./lib/browser";
 import type { StoredConfig } from "./types/storage";
 import { isImportInProgress, type StoredImport } from "./types/importStatus";
 import {
@@ -36,77 +36,28 @@ function syncBadgeWithImportStatus(lastImport: StoredImport | undefined): void {
   setActionBadge("clear");
 }
 
-function storageGet<T>(
-  area: chrome.storage.StorageArea,
-  keys: string[],
-): Promise<T> {
-  return new Promise((resolve, reject) => {
-    area.get(keys, (result) => {
-      const runtimeError = getChromeRuntimeError();
-      if (runtimeError) {
-        reject(new Error(runtimeError));
-        return;
-      }
-      resolve(result as T);
-    });
-  });
-}
-
-function storageSet(
-  area: chrome.storage.StorageArea,
-  values: Record<string, unknown>,
-): Promise<void> {
-  return new Promise((resolve, reject) => {
-    area.set(values, () => {
-      const runtimeError = getChromeRuntimeError();
-      if (runtimeError) {
-        reject(new Error(runtimeError));
-        return;
-      }
-      resolve();
-    });
-  });
-}
-
-function storageRemove(
-  area: chrome.storage.StorageArea,
-  key: string,
-): Promise<void> {
-  return new Promise((resolve, reject) => {
-    area.remove(key, () => {
-      const runtimeError = getChromeRuntimeError();
-      if (runtimeError) {
-        reject(new Error(runtimeError));
-        return;
-      }
-      resolve();
-    });
-  });
-}
-
 async function getLastImport(): Promise<StoredImport | undefined> {
-  const result = await storageGet<{ lastImport?: StoredImport }>(
-    chrome.storage.local,
-    ["lastImport"],
-  );
+  const result = (await browser.storage.local.get(["lastImport"])) as {
+    lastImport?: StoredImport;
+  };
   return result.lastImport;
 }
 
 async function getConfig(): Promise<StoredConfig> {
-  return storageGet<StoredConfig>(chrome.storage.sync, [
+  return (await browser.storage.sync.get([
     "instanceDomain",
     "apiKey",
-  ]);
+  ])) as StoredConfig;
 }
 
 async function persistLastImport(next: StoredImport | null): Promise<void> {
   if (!next) {
-    await storageRemove(chrome.storage.local, "lastImport");
+    await browser.storage.local.remove("lastImport");
     setActionBadge("clear");
     return;
   }
 
-  await storageSet(chrome.storage.local, {
+  await browser.storage.local.set({
     lastImport: {
       ...next,
       timestamp: Date.now(),
@@ -118,13 +69,13 @@ async function persistLastImport(next: StoredImport | null): Promise<void> {
 async function syncImportMonitorAlarm(): Promise<void> {
   const lastImport = await getLastImport();
   if (isImportInProgress(lastImport)) {
-    chrome.alarms.create(IMPORT_STATUS_SYNC_ALARM, {
+    browser.alarms.create(IMPORT_STATUS_SYNC_ALARM, {
       periodInMinutes: IMPORT_STATUS_POLL_INTERVAL_MINUTES,
     });
     return;
   }
 
-  await chrome.alarms.clear(IMPORT_STATUS_SYNC_ALARM);
+  await browser.alarms.clear(IMPORT_STATUS_SYNC_ALARM);
 }
 
 function delay(ms: number): Promise<void> {
@@ -272,25 +223,26 @@ async function syncImportStatusInBackground(): Promise<void> {
   }
 }
 
-chrome.runtime.onInstalled.addListener(() => {
+browser.runtime.onInstalled.addListener(() => {
   void syncImportMonitorAlarm();
   void syncImportStatusInBackground();
 });
 
-chrome.runtime.onStartup.addListener(() => {
+browser.runtime.onStartup.addListener(() => {
   void syncImportMonitorAlarm();
   void syncImportStatusInBackground();
 });
 
-chrome.runtime.onMessage.addListener((message) => {
+browser.runtime.onMessage.addListener((message: unknown) => {
   if (message && typeof message === "object" && "type" in message) {
-    if (message.type === "monitor-import-now") {
+    if ((message as { type?: unknown }).type === "monitor-import-now") {
       void syncImportStatusInBackground();
     }
   }
+  return undefined;
 });
 
-chrome.storage.onChanged.addListener((changes, areaName) => {
+onStorageChanged((changes, areaName) => {
   if (areaName !== "local" && areaName !== "sync") return;
   if (changes.lastImport || changes.instanceDomain || changes.apiKey) {
     void syncImportMonitorAlarm();
@@ -298,7 +250,7 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
   }
 });
 
-chrome.alarms.onAlarm.addListener((alarm) => {
+browser.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name !== IMPORT_STATUS_SYNC_ALARM) return;
   void syncImportStatusInBackground();
 });

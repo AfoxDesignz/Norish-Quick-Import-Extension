@@ -31,7 +31,13 @@ import {
   importRecipeFromText,
   importRecipeFromUrl,
 } from "../lib/api";
-import { getActiveTab, isExtensionContextValid } from "../lib/chrome";
+import {
+  browser,
+  getActiveTab,
+  isExtensionContextValid,
+  onStorageChanged,
+} from "../lib/browser";
+import type { Storage } from "webextension-polyfill";
 import { extractRecipeFromTab, isSameUrl } from "../lib/extract";
 import type { ImportSource, StoredImport } from "../types/importStatus";
 
@@ -193,28 +199,116 @@ export default function RecipeImportForm({ config }: RecipeImportFormProps) {
     return `${origin.replace(/\/$/, "")}/recipes/`;
   }, [config.instanceDomain, instanceOrigin]);
 
-  const recipeImageUrl = useMemo(() => {
-    if (status.type !== "success" || !status.recipeImage) return null;
+  const recipeImageCandidates = useMemo(() => {
+    if (status.type !== "success" || !status.recipeImage) return [];
     const img = status.recipeImage.trim();
-    if (!img) return null;
-    if (/^(https?:\/\/|data:image\/)/i.test(img)) {
-      return img;
+    if (!img) return [];
+    if (/^data:image\//i.test(img)) {
+      return [img];
     }
-    const origin =
-      instanceOrigin || defaultOriginForDomain(config.instanceDomain);
-    return `${origin.replace(/\/$/, "")}${img.startsWith("/") ? "" : "/"}${img}`;
+    if (/^https?:\/\//i.test(img)) {
+      return [img];
+    }
+    const origin = (
+      instanceOrigin || defaultOriginForDomain(config.instanceDomain)
+    ).replace(/\/$/, "");
+    const clean = img.replace(/^\/+/, "");
+    const candidates = [`${origin}/${clean}`];
+    if (!clean.startsWith("uploads/")) {
+      candidates.push(`${origin}/uploads/${clean}`);
+    }
+    if (!clean.startsWith("api/")) {
+      candidates.push(
+        `${origin}/api/uploads/${clean.replace(/^uploads\//, "")}`,
+      );
+    }
+    return candidates;
   }, [status, instanceOrigin, config.instanceDomain]);
+
+  const [resolvedImageSrc, setResolvedImageSrc] = useState<string | null>(null);
+  const [imageCandidateIndex, setImageCandidateIndex] = useState(0);
+  const [retryWithoutNoReferrer, setRetryWithoutNoReferrer] = useState(false);
+  const [imageLoadFailed, setImageLoadFailed] = useState(false);
+
+  useEffect(() => {
+    setImageCandidateIndex(0);
+    setRetryWithoutNoReferrer(false);
+    setImageLoadFailed(false);
+
+    if (recipeImageCandidates.length === 0) {
+      setResolvedImageSrc(null);
+      return;
+    }
+
+    const first = recipeImageCandidates[0];
+    if (/^data:image\//i.test(first)) {
+      setResolvedImageSrc(first);
+      return;
+    }
+
+    const origin = (
+      instanceOrigin || defaultOriginForDomain(config.instanceDomain)
+    ).replace(/\/$/, "");
+    const isInstanceUrl = Boolean(origin && first.startsWith(origin));
+
+    if (!isInstanceUrl) {
+      setResolvedImageSrc(first);
+      return;
+    }
+
+    let isCancelled = false;
+    let objectUrl: string | null = null;
+
+    void (async () => {
+      for (const candidate of recipeImageCandidates) {
+        try {
+          const res = await fetch(candidate, {
+            headers: { "x-api-key": config.apiKey },
+            credentials: "include",
+          });
+          const contentType = (
+            res.headers.get("content-type") ?? ""
+          ).toLowerCase();
+          if (res.ok && contentType.startsWith("image/")) {
+            const blob = await res.blob();
+            if (isCancelled) return;
+            objectUrl = URL.createObjectURL(blob);
+            setResolvedImageSrc(objectUrl);
+            return;
+          }
+        } catch {
+          continue;
+        }
+      }
+
+      if (!isCancelled) {
+        setResolvedImageSrc(first);
+      }
+    })();
+
+    return () => {
+      isCancelled = true;
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, [
+    recipeImageCandidates,
+    instanceOrigin,
+    config.instanceDomain,
+    config.apiKey,
+  ]);
 
   const persistStatus = useCallback((nextStatus: Status) => {
     if (!isExtensionContextValid()) return;
 
     const stored = toStoredImport(nextStatus);
     if (!stored) {
-      chrome.storage.local.remove("lastImport");
+      void browser.storage.local.remove("lastImport");
       return;
     }
 
-    chrome.storage.local.set({
+    void browser.storage.local.set({
       lastImport: {
         ...stored,
         timestamp: Date.now(),
@@ -233,7 +327,7 @@ export default function RecipeImportForm({ config }: RecipeImportFormProps) {
   const clearStatus = useCallback(() => {
     setStatus({ type: "idle" });
     if (!isExtensionContextValid()) return;
-    chrome.storage.local.remove("lastImport");
+    void browser.storage.local.remove("lastImport");
   }, []);
 
   const loadApiConfig = useCallback(async () => {
@@ -244,10 +338,9 @@ export default function RecipeImportForm({ config }: RecipeImportFormProps) {
 
   const requestBackgroundMonitor = useCallback(() => {
     if (!isExtensionContextValid()) return;
-    chrome.runtime.sendMessage({ type: "monitor-import-now" }, () => {
-      // Ignore runtime errors if service worker is unavailable.
-      void chrome.runtime.lastError;
-    });
+    void browser.runtime
+      .sendMessage({ type: "monitor-import-now" })
+      .catch(() => undefined);
   }, []);
 
   useEffect(() => {
@@ -261,13 +354,11 @@ export default function RecipeImportForm({ config }: RecipeImportFormProps) {
       }
     };
 
-    chrome.storage.local.get(["lastImport"], (res) => {
+    void browser.storage.local.get(["lastImport"]).then((res) => {
       updateFromStorage(res as { lastImport?: StoredImport });
     });
 
-    const listener = (changes: {
-      [key: string]: chrome.storage.StorageChange;
-    }) => {
+    const listener = (changes: Record<string, Storage.StorageChange>) => {
       if (!changes.lastImport) return;
 
       updateFromStorage({
@@ -275,8 +366,7 @@ export default function RecipeImportForm({ config }: RecipeImportFormProps) {
       });
     };
 
-    chrome.storage.onChanged.addListener(listener);
-    return () => chrome.storage.onChanged.removeListener(listener);
+    return onStorageChanged(listener);
   }, [config.instanceDomain, requestBackgroundMonitor]);
 
   useEffect(() => {
@@ -580,14 +670,38 @@ export default function RecipeImportForm({ config }: RecipeImportFormProps) {
           </div>
 
           <div className="flex items-center gap-3 min-w-0">
-            {recipeImageUrl ? (
+            {resolvedImageSrc && !imageLoadFailed ? (
               <img
-                src={recipeImageUrl}
+                src={resolvedImageSrc}
                 alt={status.recipeName ?? "Recipe cover"}
-                referrerPolicy="no-referrer"
+                referrerPolicy={
+                  retryWithoutNoReferrer ? undefined : "no-referrer"
+                }
                 className="size-14 rounded-xl object-cover shrink-0 border border-border bg-default-100 shadow-xs"
                 onError={() => {
-                  console.warn("Failed to load recipe image:", recipeImageUrl);
+                  if (
+                    !resolvedImageSrc.startsWith("blob:") &&
+                    !retryWithoutNoReferrer
+                  ) {
+                    setRetryWithoutNoReferrer(true);
+                    return;
+                  }
+                  const nextIndex = imageCandidateIndex + 1;
+                  if (
+                    !resolvedImageSrc.startsWith("blob:") &&
+                    nextIndex < recipeImageCandidates.length
+                  ) {
+                    setRetryWithoutNoReferrer(false);
+                    setImageCandidateIndex(nextIndex);
+                    setResolvedImageSrc(recipeImageCandidates[nextIndex]);
+                    return;
+                  }
+                  console.warn(
+                    "Failed to load recipe image:",
+                    status.recipeImage,
+                    recipeImageCandidates,
+                  );
+                  setImageLoadFailed(true);
                 }}
               />
             ) : (

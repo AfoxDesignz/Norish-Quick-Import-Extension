@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { isExtensionContextValid } from "../lib/chrome";
+import { browser, isExtensionContextValid } from "../lib/browser";
 
 const RELEASES_LATEST_URL =
   "https://api.github.com/repos/AfoxDesignz/Norish-Quick-Import-Extension/releases/latest";
@@ -57,7 +57,7 @@ function compareVersions(aRaw: string, bRaw: string): number {
 
 function getCurrentExtensionVersion(): string {
   if (!isExtensionContextValid()) return "unknown";
-  return chrome.runtime.getManifest().version;
+  return browser.runtime.getManifest().version;
 }
 
 function isCacheFresh(cache: VersionCacheEntry | null): boolean {
@@ -75,23 +75,26 @@ async function readCache(): Promise<VersionCacheEntry | null> {
   if (!isExtensionContextValid()) return inMemoryCache;
   if (inMemoryCache) return inMemoryCache;
 
-  return new Promise((resolve) => {
-    chrome.storage.local.get([CACHE_KEY], (result) => {
-      const cache =
-        (result?.[CACHE_KEY] as VersionCacheEntry | undefined) ?? null;
-      inMemoryCache = cache;
-      resolve(cache);
-    });
-  });
+  try {
+    const result = await browser.storage.local.get([CACHE_KEY]);
+    const cache =
+      (result?.[CACHE_KEY] as VersionCacheEntry | undefined) ?? null;
+    inMemoryCache = cache;
+    return cache;
+  } catch {
+    return inMemoryCache;
+  }
 }
 
 async function writeCache(cache: VersionCacheEntry): Promise<void> {
   inMemoryCache = cache;
   if (!isExtensionContextValid()) return;
 
-  await new Promise<void>((resolve) => {
-    chrome.storage.local.set({ [CACHE_KEY]: cache }, () => resolve());
-  });
+  try {
+    await browser.storage.local.set({ [CACHE_KEY]: cache });
+  } catch {
+    return;
+  }
 }
 
 async function fetchAndCacheLatestVersion(): Promise<VersionCacheEntry | null> {
