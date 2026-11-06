@@ -46,10 +46,12 @@ export default function Settings({
               </Tooltip.Content>
             </Tooltip>
           )}
-          <h1 className="font-serif text-lg font-semibold tracking-tight text-foreground">
-            Settings
-          </h1>
-          <VersionChip />
+          <div className="flex items-baseline gap-2">
+            <h1 className="font-serif text-lg font-semibold tracking-tight text-foreground">
+              Settings
+            </h1>
+            <VersionChip />
+          </div>
         </div>
 
         <div className="flex items-center">
