@@ -1,6 +1,15 @@
 import { createWriteStream, existsSync, rmSync, readFileSync } from "node:fs";
 import archiver from "archiver";
 
+const VALID_TARGETS = ["chrome", "firefox"];
+const target = process.argv[2];
+
+if (!target || !VALID_TARGETS.includes(target)) {
+  throw new Error(
+    `Browser target is required. Usage: node scripts/zip-dist.mjs <chrome|firefox>`,
+  );
+}
+
 const packageJsonPath = new URL("../package.json", import.meta.url);
 const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8"));
 
@@ -9,11 +18,14 @@ if (typeof version !== "string" || !version.trim()) {
   throw new Error("package version is not set or invalid.");
 }
 
-if (!existsSync("dist")) {
-  throw new Error("dist directory not found. Run build first.");
+const distDir = `dist/${target}`;
+if (!existsSync(distDir)) {
+  throw new Error(
+    `${distDir} directory not found. Run "pnpm run build:${target}" first.`,
+  );
 }
 
-const zipName = `norish_quick_import_v${version}.zip`;
+const zipName = `norish_quick_import_${target}_v${version}.zip`;
 
 if (existsSync(zipName)) {
   rmSync(zipName);
@@ -37,7 +49,7 @@ const done = new Promise((resolve, reject) => {
 });
 
 archive.pipe(output);
-archive.directory("dist/", false);
+archive.directory(`${distDir}/`, false);
 await archive.finalize();
 await done;
 

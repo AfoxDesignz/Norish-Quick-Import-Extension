@@ -1,0 +1,67 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm run lint
+
+      - name: Prettier check
+        run: pnpm run format:check
+
+      - name: Test
+        run: pnpm run test
+
+      - name: Build & Package ZIPs (Chrome & Firefox)
+        run: pnpm run release:zip
+
+      - name: Sign Firefox Extension (.xpi)
+        id: sign_firefox
+        env:
+          WEB_EXT_API_KEY: ${{ secrets.WEB_EXT_API_KEY }}
+          WEB_EXT_API_SECRET: ${{ secrets.WEB_EXT_API_SECRET }}
+        run: |
+          if [ -n "$WEB_EXT_API_KEY" ] && [ -n "$WEB_EXT_API_SECRET" ]; then
+            pnpm run sign:firefox
+          else
+            echo "::warning::WEB_EXT_API_KEY / WEB_EXT_API_SECRET secrets are not set. Skipping Firefox .xpi signing."
+          fi
+
+      - name: Upload Release Artifacts
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          generate_release_notes: true
+          files: |
+            norish_quick_import_chrome_v*.zip
+            norish_quick_import_firefox_v*.zip
+            norish_quick_import_firefox_v*.xpi

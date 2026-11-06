@@ -1,17 +1,24 @@
 {
   "name": "norish-quick-import",
   "private": true,
-  "version": "2.1.0",
+  "version": "3.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "prebuild": "node scripts/sync-manifest-version.mjs && prettier --write public/manifest.json",
-    "build": "tsc -b && vite build",
+    "build": "pnpm run build:chrome && pnpm run build:firefox",
+    "build:chrome": "tsc -b && vite build --mode chrome",
+    "build:firefox": "tsc -b && vite build --mode firefox",
+    "zip:chrome": "node scripts/zip-dist.mjs chrome",
+    "zip:firefox": "node scripts/zip-dist.mjs firefox",
+    "zip:dist": "pnpm run zip:chrome && pnpm run zip:firefox",
+    "sign:firefox": "node scripts/sign-firefox.mjs",
+    "release:chrome": "pnpm run build:chrome && pnpm run zip:chrome",
+    "release:firefox": "pnpm run build:firefox && pnpm run zip:firefox",
+    "release:firefox:signed": "pnpm run build:firefox && pnpm run zip:firefox && pnpm run sign:firefox",
+    "release:zip": "pnpm run build && pnpm run zip:dist",
     "lint": "eslint .",
     "format": "prettier --write .",
     "preview": "vite preview",
-    "release:zip": "pnpm run build && pnpm run zip:dist",
-    "zip:dist": "node scripts/zip-dist.mjs",
     "format:check": "prettier --check .",
     "test": "vitest run"
   },
@@ -25,15 +32,16 @@
     "motion": "12.34.2",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "superjson": "2.2.6"
+    "superjson": "2.2.6",
+    "webextension-polyfill": "^0.12.0"
   },
   "devDependencies": {
     "@eslint/js": "9.39.2",
     "@tailwindcss/vite": "4.2.0",
-    "@types/chrome": "0.1.36",
     "@types/node": "24.10.13",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
+    "@types/webextension-polyfill": "^0.12.6",
     "@vitejs/plugin-react": "5.1.4",
     "archiver": "7.0.1",
     "autoprefixer": "10.4.24",
@@ -47,6 +55,7 @@
     "typescript": "~5.9.3",
     "typescript-eslint": "8.56.0",
     "vite": "7.3.1",
-    "vitest": "5.1.0"
+    "vitest": "5.1.0",
+    "web-ext": "^10.8.0"
   }
 }
